@@ -28,6 +28,8 @@
 5. Submissions
     - id (int)
     - author_id (int)
+    - prob_id (int)
+    - contest_id (Optional int)
     - answer (str)
     - timestamp (datetime)
     - verdict (enum):

@@ -37,8 +37,11 @@ class Verdict(enum.Enum):
 @dataclasses.dataclass
 class Submission:
     id: Optional[int]
+
     author_id: int
     prob_id: int
+    contest_id: Optional[int]
+
     n_try: int
 
     answer: Answer

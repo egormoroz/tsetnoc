@@ -4,6 +4,7 @@ from typing import List
 @dataclasses.dataclass
 class Contest:
     id: int
+    name: str
     particip_ids: List[int]
     prob_ids: List[int]
     sub_ids: List[int]

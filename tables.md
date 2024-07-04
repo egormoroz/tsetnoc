@@ -1,6 +1,7 @@
 ## Tables
 1. Problems
     - id (int)
+    - public (bool)
     - name (fixed str)
     - content (str)
     - answer (str)
@@ -14,7 +15,6 @@
     - problem_id (int)
     - tag_id (int)
 
-
 4. Users
     - id (int)
     - name (str)
@@ -25,13 +25,30 @@
         - probs_solved
         - etc
 
-
 5. Submissions
     - id (int)
     - author_id (int)
     - answer (str)
+    - timestamp (datetime)
     - verdict (enum):
         - ACCEPTED
         - WRONG
         - TRY_LIMIT_EXCEEDED 
 
+6. Contests
+    - id (int)
+    - name (str)
+    - start (date)
+    - end  (date)
+
+7. ContestProblem
+    - contest_id 
+    - prob_id 
+
+8. ContestParticipant
+    - contest_id
+    - user_id
+
+9. ContestSubmision
+    - contest_id
+    - sub_id

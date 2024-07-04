@@ -1,8 +1,7 @@
 from typing import Set
 
 from app.infra.interfaces import IProblemRepo, ISubRepo
-from .models import Submission, Verdict, Answer
-from .tags import ReservedTags
+from .models import Submission, Verdict, Answer, ReservedTags
 
 
 # hypothetically, can be an interface (but why?)

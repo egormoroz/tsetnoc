@@ -2,7 +2,6 @@ import enum
 import dataclasses
 from typing import Optional, Set
 
-
 @dataclasses.dataclass(frozen=True)
 class Answer:
     content: str
@@ -14,6 +13,8 @@ class Problem:
     name: str
 
     max_tries: int
+    # contest problems are private (not shown in global pool)
+    public: bool
 
     tags: Set[int]
     # some sort of markdown probably
@@ -42,13 +43,3 @@ class Submission:
 
     answer: Answer
     verdict: Verdict
-
-
-@dataclasses.dataclass
-class User:
-    id: int
-    name: str
-    
-    probs_tried: int
-    probs_solved: int
-

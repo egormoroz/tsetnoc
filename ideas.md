@@ -14,5 +14,6 @@
           proper grading, likely impossible)
         - otherwise, older problems are replaced by newer (maybe weighted 
           random, based on tags, % attempted/solved, etc)
+    - UPD: probably no reason not to recycle old problems in contests
 
 

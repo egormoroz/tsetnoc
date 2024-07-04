@@ -28,13 +28,10 @@
 
 5. Submissions
     - id (int)
+    - author_id (int)
     - answer (str)
     - verdict (enum):
         - ACCEPTED
         - WRONG
         - TRY_LIMIT_EXCEEDED 
 
-
-6. UserSubmission
-    - user_id (int)
-    - sumission_id (int)

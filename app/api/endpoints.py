@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import enum
 
+from app.common.interfaces.composite import SubServerFB
 from app.core.models import User, Problem, PendingSub
 from app.common.errors import MalformedError, AlreadyExists
 
@@ -71,12 +72,10 @@ async def get_problem(uid: int, problem_id: int, probs: Problems):
 
 
 @router.get("/submissions")
-async def get_submissions_list(
+async def get_submissionlist(
         uid: int, 
         by_problem: int|None,
         by_contest: int|None,
-        subs: Submissions):
-    raise NotImplementedError
-
-
+        subsrv: SubServerFB):
+    return subsrv.get(uid, by_problem, by_contest)
 

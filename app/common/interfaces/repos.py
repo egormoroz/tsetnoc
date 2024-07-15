@@ -43,15 +43,15 @@ class ISubRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def has(self, id: int) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def count_tries(self, user_id: int, prob_id: int, cont_id: int) -> int:
         raise NotImplementedError
 
     @abc.abstractmethod
     def get(self, id: int) -> Submission|None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_by(self, uid: int) -> list[Submission]:
         raise NotImplementedError
 
 

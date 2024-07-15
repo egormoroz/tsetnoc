@@ -1,5 +1,5 @@
 from app.infra.interfaces import IProblemRepo, ISubRepo, IContestRepo, IUserRepo
-from .models import PendingSub, Submission, Verdict, Answer, ReservedTags
+from .models import PendingSub, Submission, Verdict, ReservedTags
 
 import enum
 
@@ -16,6 +16,7 @@ class MalformedError(Exception):
 
 
 # hypothetically, can be an interface (but why?)
+# besides the repos, stateless
 class SubProcessor:
     def __init__(
         self, 
@@ -49,14 +50,12 @@ class SubProcessor:
 
 
     @staticmethod
-    def _compare_answers(a: Answer, b: Answer, tags: set[int]) -> Verdict:
-        a_cont, b_cont = a.content, b.content
-
+    def _compare_answers(a: str, b: str, tags: set[int]) -> Verdict:
         if ReservedTags.ANS_DONT_TRIM not in tags:
-            a_cont, b_cont = a_cont.strip(), b_cont.strip()
+            a, b = a.strip(), b.strip()
         if ReservedTags.ANS_CASE_INSENSETIVE in tags:
-            a_cont, b_cont = a_cont.lower(), b_cont.lower()
+            a, b = a.lower(), b.lower()
 
-        return Verdict.ACCEPTED if a_cont == b_cont else Verdict.WRONG
+        return Verdict.ACCEPTED if a == b else Verdict.WRONG
 
 

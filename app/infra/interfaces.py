@@ -100,3 +100,27 @@ class IContestRepo(abc.ABC):
     def get(self, id: int) -> Contest | None:
         raise NotImplementedError
 
+
+# e.g. the whole db
+# might be unnecessary tbqh
+class IOmniRepo(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def users(self) -> IUserRepo:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def problems(self) -> IProblemRepo:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def submissions(self) -> ISubRepo:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def contests(self) -> IContestRepo:
+        raise NotImplementedError
+

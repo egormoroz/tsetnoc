@@ -1,10 +1,6 @@
 import enum
 from dataclasses import dataclass
 
-@dataclass(frozen=True)
-class Answer:
-    content: str
-
 
 @dataclass
 class Problem:
@@ -22,7 +18,7 @@ class Problem:
     # attached images, plots, etc
     # attachments: Dict
 
-    answer: Answer
+    answer: str
 
 
 class Verdict(enum.IntEnum):
@@ -39,7 +35,7 @@ class RawSub:
     prob_id: int
     contest_id: int
 
-    answer: Answer
+    answer: str
 
 
 @dataclass

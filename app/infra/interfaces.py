@@ -1,6 +1,5 @@
 import abc
 
-from typing import List, Optional
 from app.core.models import Problem, Submission, Contest
 from app.core.models.user import User
 
@@ -33,8 +32,10 @@ class IProblemRepo(abc.ABC):
 
 
 class ISubRepo(abc.ABC):
+    # 1. raises MalformedError of sorts if an error occurs
+    # 2. fills the id field
     @abc.abstractmethod
-    def add(self, sub: Submission) -> int:
+    def add_checked(self, sub: Submission) -> int:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -42,12 +43,11 @@ class ISubRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def count_tries(self, user_id: int, prob_id: int, 
-                    cont_id: Optional[int]) -> int:
+    def count_tries(self, user_id: int, prob_id: int, cont_id: int) -> int:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get(self, id: int) -> Submission | None:
+    def get(self, id: int) -> Submission|None:
         raise NotImplementedError
 
 
@@ -61,27 +61,27 @@ class IContestRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_participants(self, ids: List[int]):
+    def add_participants(self, ids: list[int]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_problems(self, ids: List[int]):
+    def add_problems(self, ids: list[int]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_submissions(self, ids: List[int]):
+    def add_submissions(self, ids: list[int]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_participants(self, id: int) -> List[int]:
+    def get_participants(self, id: int) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_problems(self, id: int) -> List[int]:
+    def get_problems(self, id: int) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_submissions(self, id: int) -> List[int]:
+    def get_submissions(self, id: int) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod

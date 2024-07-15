@@ -29,7 +29,7 @@
     - id (int)
     - author_id (int)
     - prob_id (int)
-    - contest_id (Optional int)
+    - contest_id (int)
     - answer (str)
     - timestamp (datetime)
     - verdict (enum):
@@ -50,7 +50,3 @@
 8. ContestParticipant
     - contest_id
     - user_id
-
-9. ContestSubmision
-    - contest_id
-    - sub_id

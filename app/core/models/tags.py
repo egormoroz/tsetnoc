@@ -1,6 +1,6 @@
 import enum
 
-class ReservedTags(enum.Enum):
+class ReservedTags(enum.IntEnum):
     # ignore the specified number 
     MAX_TRIES_UNLIMITED = 0
     ANS_CASE_INSENSETIVE = 1

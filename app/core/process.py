@@ -1,7 +1,17 @@
-from typing import Set
-
 from app.infra.interfaces import IProblemRepo, ISubRepo, IContestRepo, IUserRepo
-from .models import Problem, Submission, Verdict, Answer, ReservedTags
+from .models import PendingSub, Submission, Verdict, Answer, ReservedTags
+
+import enum
+
+class ErrorCode(enum.IntEnum):
+    PROBLEM_NOT_FOUND = 0
+    USER_NOT_FOUND = 1
+
+
+class MalformedError(Exception):
+    def __init__(self, ec: ErrorCode):
+        super().__init__()
+        self.ec = ec
 
 
 # hypothetically, can be an interface (but why?)
@@ -18,55 +28,34 @@ class SubProcessor:
         self._subs = submissions
         self._conts = contests
 
-    def process(self, sub: Submission):
-        # sanity check
-        assert sub.verdict == Verdict.PENDING
-        assert sub.id is None
-
-        prob = self._get_problem(sub) # also checks if sub is valid
+    def process(self, sub: PendingSub) -> Submission:
+        prob = self._probs.get(sub.prob_id)
         if prob is None:
-            sub.verdict = Verdict.SUB_MALFORMED
-            return
+            raise MalformedError(ErrorCode.PROBLEM_NOT_FOUND)
 
-        sub.n_try = 1 + self._subs.count_tries(
+        n_try = 1 + self._subs.count_tries(
                 sub.author_id, sub.prob_id, sub.contest_id)
 
         if ReservedTags.MAX_TRIES_UNLIMITED not in prob.tags \
-                and sub.n_try > prob.max_tries:
-            sub.verdict = Verdict.TRY_LIMIT_EXCEEDED
-            return 
+                and n_try > prob.max_tries:
+            verdict = Verdict.TRY_LIMIT_EXCEEDED
+        else:
+            verdict = self._compare_answers(sub.answer, prob.answer, prob.tags)
 
-        sub.verdict = _compare_answers(sub.answer, prob.answer, prob.tags)
-        sub.id = self._subs.add(sub)
-
-    def _get_problem(self, sub: Submission) -> Problem | None:
-        if not is_submission_valid(sub, self._users, self._probs, self._conts):
-            return None
-        # TODO: No need to retrieve the whole problem: 
-        # only tags and answer are necessary
-        return self._probs.get(sub.prob_id)
+        res = sub.finalize(n_try, verdict)
+        self._subs.add_checked(res) # assigns the id or raises MalformedError
+        return res
 
 
-def is_submission_valid(
-    sub: Submission, 
-    ur: IUserRepo, 
-    pr: IProblemRepo,
-    cr: IContestRepo
-) -> bool:
-    cid = sub.contest_id
-    if cid is not None:
-        return cr.has_problem(cid, sub.prob_id) \
-                and cr.has_participant(cid, sub.author_id)
-    return ur.has(sub.author_id) and pr.has(sub.prob_id)
+    @staticmethod
+    def _compare_answers(a: Answer, b: Answer, tags: set[int]) -> Verdict:
+        a_cont, b_cont = a.content, b.content
 
+        if ReservedTags.ANS_DONT_TRIM not in tags:
+            a_cont, b_cont = a_cont.strip(), b_cont.strip()
+        if ReservedTags.ANS_CASE_INSENSETIVE in tags:
+            a_cont, b_cont = a_cont.lower(), b_cont.lower()
 
-def _compare_answers(a: Answer, b: Answer, tags: Set[int]) -> Verdict:
-    a_cont, b_cont = a.content, b.content
+        return Verdict.ACCEPTED if a_cont == b_cont else Verdict.WRONG
 
-    if ReservedTags.ANS_DONT_TRIM not in tags:
-        a_cont, b_cont = a_cont.strip(), b_cont.strip()
-    if ReservedTags.ANS_CASE_INSENSETIVE in tags:
-        a_cont, b_cont = a_cont.lower(), b_cont.lower()
-
-    return Verdict.ACCEPTED if a_cont == b_cont else Verdict.WRONG
 

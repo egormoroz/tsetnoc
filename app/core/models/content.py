@@ -1,13 +1,12 @@
 import enum
-import dataclasses
-from typing import Optional, Set
+from dataclasses import dataclass
 
-@dataclasses.dataclass(frozen=True)
+@dataclass(frozen=True)
 class Answer:
     content: str
 
 
-@dataclasses.dataclass
+@dataclass
 class Problem:
     id: int
     name: str
@@ -16,7 +15,7 @@ class Problem:
     # contest problems are private (not shown in global pool)
     public: bool
 
-    tags: Set[int]
+    tags: set[int]
     # some sort of markdown probably
     content: str
 
@@ -26,7 +25,7 @@ class Problem:
     answer: Answer
 
 
-class Verdict(enum.Enum):
+class Verdict(enum.IntEnum):
     PENDING = 0
     ACCEPTED = 1
     WRONG = 2
@@ -34,15 +33,30 @@ class Verdict(enum.Enum):
     SUB_MALFORMED = 4
 
 
-@dataclasses.dataclass
-class Submission:
-    id: Optional[int]
-
+@dataclass
+class RawSub:
     author_id: int
     prob_id: int
-    contest_id: Optional[int]
-
-    n_try: int
+    contest_id: int
 
     answer: Answer
+
+
+@dataclass
+class Submission(RawSub):
+    id: int
+    n_try: int
     verdict: Verdict
+
+
+@dataclass
+class PendingSub(RawSub):
+    def finalize(self, n_try: int, verdict: Verdict) -> Submission:
+        return Submission(
+            author_id=self.author_id,
+            prob_id=self.prob_id,
+            contest_id=self.contest_id,
+            answer=self.answer,
+            n_try=n_try,
+            verdict=verdict,
+            id=0)

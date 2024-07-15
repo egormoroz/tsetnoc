@@ -1,13 +1,16 @@
 from fastapi import APIRouter, HTTPException
+import enum
 
-from app.core.models import User, Problem
-
-from app.core.models.content import PendingSub
-from app.core.process import MalformedError
-from app.infra.errors import AlreadyExists
+from app.core.models import User, Problem, PendingSub
+from app.common.errors import MalformedError, AlreadyExists
 
 from .schemas import AddedDTO, GetProblemDTO, NewProblemDTO, SubProcessResultDTO, NewSubmissionDTO
-from .dependencies import Contests, Problems, SubProcessor, Submissions, Users
+from .dependencies import Contests, ProblemServer, Problems, SubProcessor, Submissions, Users
+
+
+class ListFormat(enum.Enum):
+    IDS = "ids"
+    NAMES = "names"
 
 
 router = APIRouter()
@@ -18,22 +21,20 @@ async def register_user(uname: str, users: Users):
     try:
         u = User.new(uname)
         users.add(u)
-        return AddedDTO(id=u.id)
+        return AddedDTO(ids=[u.id])
     except AlreadyExists:
         raise HTTPException(status_code=409, detail="User already exists")
 
 
 @router.post("/join")
 async def join_contest(uid: int, contest_id: int, conts: Contests):
-    conts.add_participants([uid])
+    conts.add_participants(contest_id, [uid])
 
 
-# TODO: bulk add
-@router.post("/addproblem")
-async def add_problem(prob_dto: NewProblemDTO, probs: Problems):
-    prob = Problem(id=0, **prob_dto.__dict__)
-    probs.add(prob)
-    return AddedDTO(id=prob.id)
+@router.post("/addproblems")
+async def add_problem(prob_dtos: list[NewProblemDTO], probs: Problems):
+    ids = probs.add_many([Problem(id=0, **dto.__dict__) for dto in prob_dtos])
+    return AddedDTO(ids=ids)
 
 
 @router.post("/submit")
@@ -46,13 +47,16 @@ async def submit_answer(sub_dto: NewSubmissionDTO, sp: SubProcessor):
         raise HTTPException(status_code=422, detail=f"Malformed submission: {err}")
 
 
-# TODO: probably expose a better endpoint to get a list of names instead of raw ids?..
 @router.get("/problems")
-async def get_problemlist(uid: int, contest_id: int, conts: Contests):
+async def get_problemlist(uid: int, contest_id: int, format: ListFormat, 
+                          conts: Contests, probsrv: ProblemServer):
     if not conts.has_participant(contest_id, uid):
         raise HTTPException(status_code=403, 
                             detail="The user can't see this problem list")
-    return conts.get_problems(contest_id)
+    if format == ListFormat.IDS:
+        return probsrv.get_ids(contest_id)
+    else:
+        return probsrv.get_names(contest_id)
 
 
 # TODO: bulk get

@@ -23,6 +23,10 @@ class IProblemRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def add_many(self, problems: list[Problem]) -> list[int]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def has(self, id: int) -> bool:
         raise NotImplementedError
 
@@ -61,27 +65,19 @@ class IContestRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_participants(self, ids: list[int]):
+    def add_participants(self, cid: int, uids: list[int]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_problems(self, ids: list[int]):
+    def add_problems(self, cid: int, pids: list[int]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_submissions(self, ids: list[int]):
+    def get_participants(self, cid: int) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_participants(self, id: int) -> list[int]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_problems(self, id: int) -> list[int]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_submissions(self, id: int) -> list[int]:
+    def get_problems(self, cid: int) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -90,10 +86,6 @@ class IContestRepo(abc.ABC):
 
     @abc.abstractmethod
     def has_problem(self, cont_id: int, prob_id: int) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def has_submission(self, cont_id: int, sub_id: int) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod

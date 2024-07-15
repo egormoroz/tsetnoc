@@ -1,18 +1,7 @@
-from app.infra.interfaces import IProblemRepo, ISubRepo, IContestRepo, IUserRepo
+from app.common.interfaces.repos import IProblemRepo, ISubRepo, IContestRepo, IUserRepo
+from app.common.errors import MalformedError, ErrorCode
+
 from .models import PendingSub, Submission, Verdict, ReservedTags
-
-import enum
-
-class ErrorCode(enum.IntEnum):
-    PROBLEM_NOT_FOUND = 0
-    USER_NOT_FOUND = 1
-    CONTEST_NOT_FOUND = 2
-
-
-class MalformedError(Exception):
-    def __init__(self, ec: ErrorCode):
-        super().__init__()
-        self.ec = ec
 
 
 # hypothetically, can be an interface (but why?)

@@ -3,13 +3,12 @@ from app.core.models import Verdict
 
 
 class AddedDTO(BaseModel):
-    id: int
+    ids: list[int]
 
 
 class NewProblemDTO(BaseModel):
     name: str
     max_tries: int
-    public: bool
     tags: set[int]
     content: str
     answer: str
@@ -31,6 +30,5 @@ class GetProblemDTO(BaseModel):
     id: int
     name: str
     max_tries: int
-    public: bool
     tags: set[int]
     content: str

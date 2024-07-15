@@ -9,8 +9,6 @@ class Problem:
 
     max_tries: int
     # contest problems are private (not shown in global pool)
-    public: bool
-
     tags: set[int]
     # some sort of markdown probably
     content: str

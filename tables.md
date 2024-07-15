@@ -1,7 +1,6 @@
 ## Tables
 1. Problems
     - id (int)
-    - public (bool)
     - name (fixed str)
     - content (str)
     - answer (str)

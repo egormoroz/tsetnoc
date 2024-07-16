@@ -27,7 +27,7 @@ async def register_user(uname: str, users: Users):
     try:
         u = User.new(uname)
         users.add(u)
-        return AddedDTO(ids=[u.id])
+        return {"message": "user created successfully", "id": f"{u.id}"}
     except AlreadyExists:
         raise HTTPException(status_code=409, detail="User already exists")
 
@@ -35,12 +35,13 @@ async def register_user(uname: str, users: Users):
 @router.post("/join")
 async def join_contest(uid: int, contest_id: int, conts: Contests):
     conts.add_participants(contest_id, [uid])
+    return {"message": "joined contest successfully"}
 
 
-@router.post("/addproblems")
-async def add_problem(prob_dtos: list[NewProblemDTO], probs: Problems):
+@router.post("/roblems", status_code=201)
+async def add_problems(prob_dtos: list[NewProblemDTO], probs: Problems):
     ids = probs.add_many([Problem(id=0, **dto.__dict__) for dto in prob_dtos])
-    return AddedDTO(ids=ids)
+    return {"message": "problems added successfully", "ids": ids }
 
 
 @router.post("/submit")
@@ -84,7 +85,7 @@ async def get_problem(uid: int, problem_id: int, probs: Problems, users: Users):
 
 
 @router.get("/submissions")
-async def get_submissionlist(
+async def get_submission_list(
         uid: int, 
         by_problem: int|None,
         by_contest: int|None,

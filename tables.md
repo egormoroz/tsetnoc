@@ -2,6 +2,7 @@
 1. Problems
     - id (int)
     - name (fixed str)
+    - max_tries (int)
     - content (str)
     - answer (str)
 

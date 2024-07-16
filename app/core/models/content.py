@@ -20,11 +20,9 @@ class Problem:
 
 
 class Verdict(enum.IntEnum):
-    PENDING = 0
-    ACCEPTED = 1
-    WRONG = 2
-    TRY_LIMIT_EXCEEDED = 3
-    SUB_MALFORMED = 4
+    ACCEPTED = 0
+    WRONG = 1
+    TRY_LIMIT_EXCEEDED = 2
 
 
 @dataclass

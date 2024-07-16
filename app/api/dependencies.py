@@ -1,9 +1,7 @@
 from app.common.interfaces import (
     IContestRepo, IOmniRepo, IProblemRepo, ISubRepo, IUserRepo,
-    IProblemServer, ProblemServerFB
 )
 
-from app.common.interfaces.composite import ISubServer, SubServerFB
 from app.core.process import SubProcessor as _SubProcessor
 
 from fastapi import Depends
@@ -28,13 +26,6 @@ async def get_subs(omni: OmniRepo) -> ISubRepo:
 async def get_contests(omni: OmniRepo) -> IContestRepo:
     return omni.contests
 
-# TODO
-async def get_probserver(omni: OmniRepo) -> IProblemServer:
-    return ProblemServerFB(omni.problems, omni.contests)
-
-# TODO
-async def get_subserver(omni: OmniRepo) -> ISubServer:
-    return SubServerFB(omni.submissions)
 
 async def get_subprocessor(omni: OmniRepo) -> _SubProcessor:
     return _SubProcessor(omni.users, omni.problems, omni.submissions, omni.contests)
@@ -44,6 +35,4 @@ Problems = Annotated[IProblemRepo, Depends(get_probs)]
 Submissions = Annotated[ISubRepo, Depends(get_subs)]
 Contests = Annotated[IContestRepo, Depends(get_contests)]
 SubProcessor = Annotated[_SubProcessor, Depends(get_subprocessor)]
-ProblemServer = Annotated[IProblemServer, Depends(get_probserver)]
-SubServer = Annotated[ISubServer, Depends(get_subserver)]
 

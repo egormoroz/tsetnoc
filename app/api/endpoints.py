@@ -1,17 +1,22 @@
 from fastapi import APIRouter, HTTPException
 import enum
 
-from app.common.interfaces.composite import SubServerFB
 from app.core.models import User, Problem, PendingSub
 from app.common.errors import MalformedError, AlreadyExists
 
 from .schemas import AddedDTO, GetProblemDTO, NewProblemDTO, SubProcessResultDTO, NewSubmissionDTO
-from .dependencies import Contests, ProblemServer, Problems, SubProcessor, Submissions, Users
+from .dependencies import Contests, Problems, SubProcessor, Submissions, Users
 
 
-class ListFormat(enum.Enum):
+class ProbListFmt(enum.Enum):
     IDS = "ids"
-    NAMES = "names"
+    IDS_NAMES = "ids_names"
+    FULL = "full"
+
+
+class SubListFmt(enum.Enum):
+    IDS = "ids"
+    FULL = "full"
 
 
 router = APIRouter()
@@ -49,25 +54,32 @@ async def submit_answer(sub_dto: NewSubmissionDTO, sp: SubProcessor):
 
 
 @router.get("/problems")
-async def get_problemlist(uid: int, contest_id: int, format: ListFormat, 
-                          conts: Contests, probsrv: ProblemServer):
+async def get_problem_list(
+        uid: int,
+        contest_id: int,
+        fmt: ProbListFmt,
+        conts: Contests, probs: Problems):
     if not conts.has_participant(contest_id, uid):
         raise HTTPException(status_code=403, 
                             detail="The user can't see this problem list")
-    if format == ListFormat.IDS:
-        return probsrv.get_ids(contest_id)
+    if fmt == ProbListFmt.IDS:
+        return probs.get_ids_by_contest(contest_id)
+    elif fmt == ProbListFmt.IDS_NAMES:
+        return [{"id": p.id, "name": p.name}
+                for p in probs.get_by_contest(contest_id)]
     else:
-        return probsrv.get_names(contest_id)
+        assert fmt == ProbListFmt.FULL
+        return [GetProblemDTO.model_validate(p, from_attributes=True)
+                for p in probs.get_by_contest(contest_id)]
 
 
-# TODO: bulk get
 @router.get("/problem")
-async def get_problem(uid: int, problem_id: int, probs: Problems):
-    # TODO: test if uid is allowed to see this problem
+async def get_problem(uid: int, problem_id: int, probs: Problems, users: Users):
+    # also checks if the problem exists, since you cannot see a nonexistant problem lol
+    if not users.can_see_problem(uid, problem_id):
+        raise HTTPException(status_code=403, detail="The user either can't see "
+            + "this problem or the problem does'nt exist")
     prob = probs.get(problem_id)
-    if not prob:
-        raise HTTPException(status_code=404, detail="Problem not found")
-    # TODO: make sure this works, I haven't tested it yet lol
     return GetProblemDTO.model_validate(prob, from_attributes=True)
 
 
@@ -76,6 +88,12 @@ async def get_submissionlist(
         uid: int, 
         by_problem: int|None,
         by_contest: int|None,
-        subsrv: SubServerFB):
-    return subsrv.get(uid, by_problem, by_contest)
+        fmt: SubListFmt,
+        subs: Submissions):
+    if fmt == SubListFmt.IDS:
+        return subs.get_ids_by(uid, by_problem, by_contest)
+    else:
+        assert fmt == SubListFmt.FULL
+        return subs.get_by(uid, by_problem, by_contest)
+
 

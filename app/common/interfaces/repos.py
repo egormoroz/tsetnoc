@@ -16,6 +16,10 @@ class IUserRepo(abc.ABC):
     def get(self, id: int) -> User | None:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def can_see_problem(self, uid: int, pid: int) -> bool:
+        raise NotImplementedError
+
 
 class IProblemRepo(abc.ABC):
     @abc.abstractmethod
@@ -32,6 +36,14 @@ class IProblemRepo(abc.ABC):
 
     @abc.abstractmethod
     def get(self, id: int) -> Problem | None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_ids_by_contest(self, cont_id: int) -> list[int]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_by_contest(self, cont_id: int) -> list[Problem]:
         raise NotImplementedError
 
 
@@ -51,7 +63,11 @@ class ISubRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_by(self, uid: int) -> list[Submission]:
+    def get_ids_by(self, uid: int, pid: int|None, cid: int|None) -> list[int]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_by(self, uid: int, pid: int|None, cid: int|None) -> list[Submission]:
         raise NotImplementedError
 
 

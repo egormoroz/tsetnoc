@@ -4,7 +4,7 @@ import enum
 from app.core.models import User, Problem, PendingSub
 from app.common.errors import MalformedError, AlreadyExists
 
-from .schemas import AddedDTO, GetProblemDTO, NewProblemDTO, SubProcessResultDTO, NewSubmissionDTO
+from .schemas import GetProblemDTO, NewProblemDTO, SubProcessResultDTO, NewSubmissionDTO
 from .dependencies import Contests, Problems, SubProcessor, Submissions, Users
 
 
@@ -38,7 +38,7 @@ async def join_contest(uid: int, contest_id: int, conts: Contests):
     return {"message": "joined contest successfully"}
 
 
-@router.post("/roblems", status_code=201)
+@router.post("/problems", status_code=201)
 async def add_problems(prob_dtos: list[NewProblemDTO], probs: Problems):
     ids = probs.add_many([Problem(id=0, **dto.__dict__) for dto in prob_dtos])
     return {"message": "problems added successfully", "ids": ids }
@@ -79,7 +79,7 @@ async def get_problem(uid: int, problem_id: int, probs: Problems, users: Users):
     # also checks if the problem exists, since you cannot see a nonexistant problem lol
     if not users.can_see_problem(uid, problem_id):
         raise HTTPException(status_code=403, detail="The user either can't see "
-            + "this problem or the problem does'nt exist")
+            + "this problem or the problem doesn't exist")
     prob = probs.get(problem_id)
     return GetProblemDTO.model_validate(prob, from_attributes=True)
 

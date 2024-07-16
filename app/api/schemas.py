@@ -2,10 +2,6 @@ from pydantic import BaseModel
 from app.core.models import Verdict
 
 
-class AddedDTO(BaseModel):
-    ids: list[int]
-
-
 class NewProblemDTO(BaseModel):
     name: str
     max_tries: int

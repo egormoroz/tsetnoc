@@ -19,7 +19,7 @@ def getter(attr_name: str):
     return fn
 
 def get_subprocessor(bs: Bootstrap) -> _SubProcessor:
-    return _SubProcessor(bs.users, bs.problems, bs.subs, bs.contests)
+    return _SubProcessor(bs.users, bs.problems, bs.subs)
 
 
 Users = Annotated[IUserRepo, Depends(getter("users"))]

@@ -26,7 +26,7 @@ router = APIRouter()
 async def register_user(uname: str, users: Users):
     try:
         u = User.new(uname)
-        users.add(u)
+        await users.add(u)
         return {"message": "user created successfully", "id": f"{u.id}"}
     except AlreadyExists:
         raise HTTPException(status_code=409, detail="User already exists")
@@ -34,7 +34,7 @@ async def register_user(uname: str, users: Users):
 
 @router.post("/join")
 async def join_contest(uid: int, contest_id: int, conts: Contests):
-    conts.add_participants(contest_id, [uid])
+    await conts.add_participants(contest_id, [uid])
     return {"message": "joined contest successfully"}
 
 
@@ -48,7 +48,7 @@ async def add_problems(prob_dtos: list[NewProblemDTO], probs: Problems):
 async def submit_answer(sub_dto: NewSubmissionDTO, sp: SubProcessor):
     sub = PendingSub(**sub_dto.__dict__)
     try:
-        processed = sp.process(sub)
+        processed = await sp.process(sub)
         return SubProcessResultDTO(id=processed.id, verdict=processed.verdict)
     except MalformedError as err:
         raise HTTPException(status_code=422, detail=f"Malformed submission: {err}")
@@ -60,24 +60,24 @@ async def get_problem_list(
         contest_id: int,
         fmt: ProbListFmt,
         conts: Contests, probs: Problems):
-    if not conts.has_participant(contest_id, uid):
+    if not await conts.has_participant(contest_id, uid):
         raise HTTPException(status_code=403, 
                             detail="The user can't see this problem list")
     if fmt == ProbListFmt.IDS:
         return probs.get_ids_by_contest(contest_id)
     elif fmt == ProbListFmt.IDS_NAMES:
         return [{"id": p.id, "name": p.name}
-                for p in probs.get_by_contest(contest_id)]
+                for p in await probs.get_by_contest(contest_id)]
     else:
         assert fmt == ProbListFmt.FULL
         return [GetProblemDTO.model_validate(p, from_attributes=True)
-                for p in probs.get_by_contest(contest_id)]
+                for p in await probs.get_by_contest(contest_id)]
 
 
 @router.get("/problem")
 async def get_problem(uid: int, problem_id: int, probs: Problems, users: Users):
     # also checks if the problem exists, since you cannot see a nonexistant problem lol
-    if not users.can_see_problem(uid, problem_id):
+    if not await users.can_see_problem(uid, problem_id):
         raise HTTPException(status_code=403, detail="The user either can't see "
             + "this problem or the problem doesn't exist")
     prob = probs.get(problem_id)

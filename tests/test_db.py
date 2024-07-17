@@ -37,7 +37,7 @@ async def test_insert_problems(session):
 
 
 @pytest.mark.asyncio
-async def test_insert_problems_contest(session, insert_problems):
+async def test_insert_get_problems_contest(session, insert_problems):
     problems: list[core.Problem] = insert_problems[0]
     prob_repo: SQLProblemRepo = insert_problems[1]
     cont_repo = SQLContestRepo(session)
@@ -46,6 +46,9 @@ async def test_insert_problems_contest(session, insert_problems):
 
     cid = await cont_repo.add(core.Contest(id=0, name="contest 1"))
     await cont_repo.add_problems(cid, prob_ids)
+
+    got_ids = await prob_repo.get_ids_by_contest(cid)
+    assert set(got_ids) == set(prob_ids)
 
     got = await prob_repo.get_by_contest(cid)
     got.sort(key=lambda p: p.id)

@@ -1,4 +1,3 @@
-from typing import override
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
@@ -13,7 +12,6 @@ class SQLProblemRepo(IProblemRepo):
     def __init__(self, session: async_sessionmaker[AsyncSession]):
         self.session = session
 
-    @override
     async def add_many(self, problems: list[core.Problem]) -> list[int]:
         prob_data = [{
             "name": p.name,
@@ -36,7 +34,6 @@ class SQLProblemRepo(IProblemRepo):
 
         return [i for i in prob_ids]
 
-    @override
     async def get_ids_by_contest(self, cont_id: int) -> list[int]:
         async with self.session() as sess:
             query = select(infra.contest_problem.c.problem_id).where(
@@ -44,7 +41,6 @@ class SQLProblemRepo(IProblemRepo):
             result = await sess.execute(query)
             return [i for i in result.scalars().all()]
 
-    @override
     async def get_by_contest(self, cont_id: int) -> list[core.Problem]:
         query = (
             select(infra.Problem)
@@ -66,7 +62,6 @@ class SQLProblemRepo(IProblemRepo):
             ) for p in problems
         ]
 
-    @override
     async def get(self, id: int) -> core.Problem | None:
         query = select(infra.Problem).options(joinedload(infra.Problem.tags))
         async with self.session() as sess:

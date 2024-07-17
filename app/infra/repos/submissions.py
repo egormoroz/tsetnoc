@@ -1,4 +1,3 @@
-from typing import override
 import dataclasses
 
 from sqlalchemy import func, insert, select
@@ -20,7 +19,6 @@ class SQLSubRepo(ISubRepo):
     def __init__(self, session: async_sessionmaker[AsyncSession]):
         self.session = session
 
-    @override
     async def add_checked(self, sub: core.Submission) -> int:
         data = dataclasses.asdict(sub)
         stmt = insert(Sub).values(data).returning(Sub.id)
@@ -42,7 +40,6 @@ class SQLSubRepo(ISubRepo):
                 raise
             raise MalformedError(ec)
 
-    @override
     async def count_tries(self, user_id: int, prob_id: int, cont_id: int) -> int:
         query = select(func.count()).select_from(Sub).where(
             Sub.author_id == user_id,
@@ -53,7 +50,6 @@ class SQLSubRepo(ISubRepo):
             result = await sess.execute(query)
             return result.scalar_one()
 
-    @override
     async def get_ids_by(self, uid: int, pid: int|None, cid: int|None) -> list[int]:
         clauses = [Sub.user_id == uid]
         if pid is not None:
@@ -66,7 +62,6 @@ class SQLSubRepo(ISubRepo):
             result = await sess.execute(query)
             return [i for i in result.scalars().all()]
 
-    @override
     async def get_by(
             self, 
             uid: int, 

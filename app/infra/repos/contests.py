@@ -1,4 +1,3 @@
-from typing import override
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
@@ -16,14 +15,12 @@ class SQLContestRepo(IContestRepo):
     def __init__(self, session: async_sessionmaker[AsyncSession]):
         self.session = session
 
-    @override
     async def add(self, contest: core.Contest) -> int:
         async with self.session() as sess, sess.begin():
             stmt = insert(Cont).values(name=contest.name).returning(Cont.id)
             result = await sess.execute(stmt)
             return result.scalar_one()
 
-    @override
     async def add_participants(self, cid: int, uids: list[int]):
         stmt = insert(infra.contest_participant).values(
             [{"contest_id": cid, "user_id": uid} for uid in uids]
@@ -31,7 +28,6 @@ class SQLContestRepo(IContestRepo):
         async with self.session() as sess, sess.begin():
             await sess.execute(stmt)
 
-    @override
     async def add_problems(self, cid: int, pids: list[int]):
         stmt = insert(infra.contest_participant).values(
             [{"contest_id": cid, "problem_id": pid} for pid in pids]

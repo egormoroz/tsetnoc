@@ -1,4 +1,3 @@
-from typing import override
 import dataclasses
 from sqlalchemy import exists, select, insert, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,6 @@ class SQLUserRepo(IUserRepo):
     def __init__(self, session: async_sessionmaker[AsyncSession]):
         self.session = session
 
-    @override
     async def add(self, user: core.User) -> int:
         data = dataclasses.asdict(user)
         del data["id"]
@@ -22,7 +20,6 @@ class SQLUserRepo(IUserRepo):
             result = await sess.execute(stmt)
             return result.scalar_one()
 
-    @override
     async def get(self, id: int) -> core.User | None:
         async with self.session() as sess:
             query = select(infra.User).filter(infra.User.id == id)
@@ -33,7 +30,6 @@ class SQLUserRepo(IUserRepo):
         return core.User(id=u.id, name=u.name, n_submissions=u.n_submissions,
                          probs_tried=u.probs_tried, probs_solved=u.probs_solved)
 
-    @override
     async def can_see_problem(self, uid: int, pid: int) -> bool:
         c_prob = infra.contest_problem
         c_part = infra.contest_participant
@@ -51,7 +47,6 @@ class SQLUserRepo(IUserRepo):
             result = await sess.execute(query)
             return result.scalar_one()
 
-    @override
     async def get_by_contest(self, cont_id: int) -> list[int]:
         cp = infra.contest_participant
         query = select(infra.User.id).where(cp.c.contest_id == cont_id)
@@ -59,7 +54,6 @@ class SQLUserRepo(IUserRepo):
             result = await sess.execute(query)
             return [i for i in result.scalars().all()]
 
-    @override
     async def joined_contest(self, uid: int, cid: int) -> bool:
         cp = infra.contest_participant
         query = select(exists()).where(cp.c.contest_id == cid, cp.c.user_id == uid)

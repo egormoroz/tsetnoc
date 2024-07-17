@@ -1,8 +1,7 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (
     ForeignKey, Column, Integer, String, Table, func
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
 import datetime
 from typing import Annotated
 
@@ -82,9 +81,9 @@ class Submission(Base):
     __tablename__ = 'submissions'
 
     id: Mapped[intpk]
-    author_id: Mapped[int] = mapped_column(ForeignKey("users'id"))
-    prob_id: Mapped[int]  = mapped_column(ForeignKey("problems'id"))
-    contest_id: Mapped[int]  = mapped_column(ForeignKey("contests'id"))
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    prob_id: Mapped[int]  = mapped_column(ForeignKey("problems.id"))
+    contest_id: Mapped[int]  = mapped_column(ForeignKey("contests.id"))
     n_try: Mapped[int]
     answer: Mapped[nestr64]
     timestamp: Mapped[timestamp]

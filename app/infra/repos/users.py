@@ -1,5 +1,6 @@
 from typing import override
-from sqlalchemy import select
+import dataclasses
+from sqlalchemy import exists, select, insert, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 from app.common.interfaces import IUserRepo
@@ -14,12 +15,12 @@ class SQLUserRepo(IUserRepo):
 
     @override
     async def add(self, user: core.User) -> int:
-        async with self.session() as sess:
-            u = infra.User(**user.__dict__)
-            sess.add(u)
-            await sess.commit()
-            await sess.refresh(u)
-            return u.id
+        data = dataclasses.asdict(user)
+        del data["id"]
+        async with self.session() as sess, sess.begin():
+            stmt = insert(infra.User).values(data).returning(infra.User.id)
+            result = await sess.execute(stmt)
+            return result.scalar_one()
 
     @override
     async def get(self, id: int) -> core.User | None:
@@ -34,5 +35,34 @@ class SQLUserRepo(IUserRepo):
 
     @override
     async def can_see_problem(self, uid: int, pid: int) -> bool:
-        # TODO: check if user has joined any contest which has problem with index pid
-        raise NotImplementedError
+        c_prob = infra.contest_problem
+        c_part = infra.contest_participant
+
+        query = select(exists().where(
+            and_(
+                infra.Contest.id == c_prob.c.contest_id,
+                c_prob.c.problem_id == pid,
+                infra.Contest.id == c_part.c.contest_id,
+                c_part.c.user_id == uid
+            )
+        ))
+
+        async with self.session() as sess:
+            result = await sess.execute(query)
+            return result.scalar_one()
+
+    @override
+    async def get_by_contest(self, cont_id: int) -> list[int]:
+        cp = infra.contest_participant
+        query = select(infra.User.id).where(cp.c.contest_id == cont_id)
+        async with self.session() as sess:
+            result = await sess.execute(query)
+            return [i for i in result.scalars().all()]
+
+    @override
+    async def joined_contest(self, uid: int, cid: int) -> bool:
+        cp = infra.contest_participant
+        query = select(exists()).where(cp.c.contest_id == cid, cp.c.user_id == uid)
+        async with self.session() as sess:
+            result = await sess.execute(query)
+            return result.scalar_one()

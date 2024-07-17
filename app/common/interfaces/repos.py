@@ -15,6 +15,14 @@ class IUserRepo(abc.ABC):
     async def can_see_problem(self, uid: int, pid: int) -> bool:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    async def get_by_contest(self, cont_id: int) -> list[int]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def joined_contest(self, uid: int, cid: int) -> bool:
+        raise NotImplementedError
+
 
 class IProblemRepo(abc.ABC):
     @abc.abstractmethod
@@ -46,10 +54,6 @@ class ISubRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get(self, id: int) -> Submission|None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     async def get_ids_by(self, uid: int, pid: int|None, cid: int|None) -> list[int]:
         raise NotImplementedError
 
@@ -64,22 +68,10 @@ class IContestRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def has(self, id: int) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     async def add_participants(self, cid: int, uids: list[int]):
         raise NotImplementedError
 
     @abc.abstractmethod
     async def add_problems(self, cid: int, pids: list[int]):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def get_participants(self, cid: int) -> list[int]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def has_participant(self, cont_id: int, user_id: int) -> bool:
         raise NotImplementedError
 

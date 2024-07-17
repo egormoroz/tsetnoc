@@ -85,6 +85,7 @@ class Submission(Base):
     author_id: Mapped[int] = mapped_column(ForeignKey("users'id"))
     prob_id: Mapped[int]  = mapped_column(ForeignKey("problems'id"))
     contest_id: Mapped[int]  = mapped_column(ForeignKey("contests'id"))
+    n_try: Mapped[int]
     answer: Mapped[nestr64]
     timestamp: Mapped[timestamp]
     verdict: Mapped[Verdict]

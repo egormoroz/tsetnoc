@@ -59,8 +59,8 @@ async def get_problem_list(
         uid: int,
         contest_id: int,
         fmt: ProbListFmt,
-        conts: Contests, probs: Problems):
-    if not await conts.has_participant(contest_id, uid):
+        users: Users, probs: Problems):
+    if not await users.joined_contest(uid, contest_id):
         raise HTTPException(status_code=403, 
                             detail="The user can't see this problem list")
     if fmt == ProbListFmt.IDS:

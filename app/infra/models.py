@@ -58,10 +58,19 @@ class Tag(Base):
     __tablename__ = "tags"
 
     id: Mapped[intpk]
+
+    problems = relationship("Problem", secondary=problem_tag, back_populates="tags")
+    info = relationship("TagInfo", back_populates="tag", uselist=False)
+
+
+class TagInfo(Base):
+    __tablename__ = "tag_info"
+
+    id: Mapped[int] = mapped_column(ForeignKey("tags.id"), primary_key=True)
     name: Mapped[nestr64]
     description : Mapped[str64]
 
-    problems = relationship("Problem", secondary=problem_tag, back_populates="tags")
+    tag = relationship("Tag", back_populates="info")
 
 
 class User(Base):
@@ -99,8 +108,8 @@ class Contest(Base):
 
     id: Mapped[intpk]
     name: Mapped[nestr64]
-    start: Mapped[datetime.datetime] = mapped_column(nullable=False)
-    end: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    start: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    end: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
     problems = relationship('Problem', secondary=contest_problem, back_populates='contests')
     participants = relationship('User', secondary=contest_participant, back_populates='contests')

@@ -1,3 +1,4 @@
+import dataclasses
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
@@ -16,8 +17,10 @@ class SQLContestRepo(IContestRepo):
         self.session = session
 
     async def add(self, contest: core.Contest) -> int:
+        values = dataclasses.asdict(contest)
+        del values["id"]
         async with self.session() as sess, sess.begin():
-            stmt = insert(Cont).values(name=contest.name).returning(Cont.id)
+            stmt = insert(Cont).values(values).returning(Cont.id)
             result = await sess.execute(stmt)
             return result.scalar_one()
 
@@ -29,7 +32,7 @@ class SQLContestRepo(IContestRepo):
             await sess.execute(stmt)
 
     async def add_problems(self, cid: int, pids: list[int]):
-        stmt = insert(infra.contest_participant).values(
+        stmt = insert(infra.contest_problem).values(
             [{"contest_id": cid, "problem_id": pid} for pid in pids]
         )
         async with self.session() as sess, sess.begin():

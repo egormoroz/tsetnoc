@@ -1,7 +1,7 @@
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from app.common.interfaces import IProblemRepo
 
 import app.core.models as core
@@ -44,13 +44,15 @@ class SQLProblemRepo(IProblemRepo):
     async def get_by_contest(self, cont_id: int) -> list[core.Problem]:
         query = (
             select(infra.Problem)
+            .options(selectinload(infra.Problem.tags))
             .join(infra.contest_problem)
+            .join(infra.problem_tag)
             .where(infra.contest_problem.c.contest_id == cont_id)
-            .options(joinedload(infra.Problem.tags))
+            .group_by(infra.Problem.id)
         )
         async with self.session() as sess:
             result = await sess.execute(query)
-            problems = result.scalars().all()
+            problems_with_tags = result.scalars().all()
         return [
             core.Problem(
                 id=p.id,
@@ -58,23 +60,25 @@ class SQLProblemRepo(IProblemRepo):
                 max_tries=p.max_tries,
                 content=p.content,
                 answer=p.answer,
-                tags=set(p.tags)
-            ) for p in problems
+                tags=set([t.id for t in p.tags])
+            ) for p in problems_with_tags
         ]
 
     async def get(self, id: int) -> core.Problem | None:
-        query = select(infra.Problem).options(joinedload(infra.Problem.tags))
+        query = (
+            select(infra.Problem)
+            .options(selectinload(infra.Problem.tags))
+            .where(infra.Problem.id == id)
+        )
         async with self.session() as sess:
             result = await sess.execute(query)
             p = result.scalar_one_or_none()
-        if p is None:
-            return None
         return core.Problem(
             id=p.id,
             name=p.name,
             max_tries=p.max_tries,
             content=p.content,
             answer=p.answer,
-            tags=set(p.tags)
+            tags=set(tag.id for tag in p.tags)
         )
 

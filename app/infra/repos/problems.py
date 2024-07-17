@@ -66,3 +66,20 @@ class SQLProblemRepo(IProblemRepo):
             ) for p in problems
         ]
 
+    @override
+    async def get(self, id: int) -> core.Problem | None:
+        query = select(infra.Problem).options(joinedload(infra.Problem.tags))
+        async with self.session() as sess:
+            result = await sess.execute(query)
+            p = result.scalar_one_or_none()
+        if p is None:
+            return None
+        return core.Problem(
+            id=p.id,
+            name=p.name,
+            max_tries=p.max_tries,
+            content=p.content,
+            answer=p.answer,
+            tags=set(p.tags)
+        )
+

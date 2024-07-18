@@ -95,3 +95,7 @@ class IContestRepo(abc.ABC):
     async def add_problems(self, cid: int, pids: list[int]):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    async def all(self) -> list[Contest]:
+        raise NotImplementedError
+

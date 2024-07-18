@@ -1,5 +1,5 @@
 import dataclasses
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 from app.common.interfaces import IContestRepo
@@ -38,4 +38,13 @@ class SQLContestRepo(IContestRepo):
         )
         async with self.session() as sess, sess.begin():
             await sess.execute(stmt)
+
+    async def all(self) -> list[core.Contest]:
+        async with self.session() as sess:
+            result = await sess.execute(select(Cont))
+        return [
+            core.Contest(id=c.id, name=c.name, start=c.start, end=c.end)
+            for c in result.scalars().all()
+        ]
+
 

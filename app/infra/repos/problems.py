@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 from sqlalchemy.orm import selectinload
-from app.common.errors import MalformedError
+from app.common.errors import MalformedError, ErrorCode
 from app.common.interfaces import IProblemRepo
 
 import app.core.models as core
@@ -33,14 +33,18 @@ class SQLProblemRepo(IProblemRepo):
                     for p, pid in zip(problems, prob_ids)
                     for tag_id in p.tags
                 ]
-                await sess.execute(insert(infra.problem_tag).values(prob_tag_data))
+                if prob_tag_data:
+                    await sess.execute(insert(infra.problem_tag).values(prob_tag_data))
 
             for p, pid in zip(problems, prob_ids):
                 p.id = pid
             return list(prob_ids)
         except IntegrityError as e:
-            if "FOREIGN KEY" in str(e.orig):
-                raise MalformedError()
+            e = str(e.orig)
+            if "FOREIGN KEY" in e:
+                raise MalformedError(ErrorCode.FOREIGN_KEY_ERROR)
+            elif "UNIQUE" in e:
+                raise MalformedError(ErrorCode.ALREADY_EXISTS)
             raise
 
     async def get_ids_by_contest(self, cont_id: int) -> list[int]:
@@ -54,8 +58,6 @@ class SQLProblemRepo(IProblemRepo):
         query = (
             select(infra.Problem)
             .options(selectinload(infra.Problem.tags))
-            .join(infra.contest_problem)
-            .join(infra.problem_tag)
             .where(infra.contest_problem.c.contest_id == cont_id)
             .group_by(infra.Problem.id)
         )

@@ -29,16 +29,12 @@ class SQLSubRepo(ISubRepo):
                 sub.id = result.scalar_one()
                 return sub.id
         except IntegrityError as e:
-            orig = str(e.orig)
-            if "author_id" in orig:
-                ec = ErrorCode.USER_NOT_FOUND
-            elif "prob_id" in orig:
-                ec = ErrorCode.PROBLEM_NOT_FOUND
-            elif "contest_id" in orig:
-                ec = ErrorCode.CONTEST_NOT_FOUND
-            else:
-                raise
-            raise MalformedError(ec)
+            e = str(e.orig)
+            if "FOREIGN KEY" in e:
+                raise MalformedError(ErrorCode.FOREIGN_KEY_ERROR)
+            elif "UNIQUE" in e:
+                raise MalformedError(ErrorCode.ALREADY_EXISTS)
+            raise
 
     async def count_tries(self, user_id: int, prob_id: int, cont_id: int) -> int:
         query = select(func.count()).select_from(Sub).where(

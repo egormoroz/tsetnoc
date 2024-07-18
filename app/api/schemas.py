@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from app.core.models import Verdict
+from datetime import datetime
 
 
 class NewProblemDTO(BaseModel):
@@ -28,3 +29,9 @@ class GetProblemDTO(BaseModel):
     max_tries: int
     tags: set[int]
     content: str
+
+
+class ContestDTO(BaseModel):
+    name: str
+    start: datetime
+    end: datetime

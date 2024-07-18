@@ -3,7 +3,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
-from app.common.errors import MalformedError
+from app.common.errors import ErrorCode, MalformedError
 from app.common.interfaces import IContestRepo
 
 import app.core.models as core
@@ -35,8 +35,11 @@ class SQLContestRepo(IContestRepo):
             async with self.session() as sess, sess.begin():
                 await sess.execute(stmt)
         except IntegrityError as e:
-            if "FOREIGN KEY" in str(e.orig):
-                raise MalformedError()
+            e = str(e.orig)
+            if "FOREIGN KEY" in e:
+                raise MalformedError(ErrorCode.FOREIGN_KEY_ERROR)
+            elif "UNIQUE" in e:
+                raise MalformedError(ErrorCode.ALREADY_EXISTS)
             raise
 
 
@@ -48,8 +51,11 @@ class SQLContestRepo(IContestRepo):
             async with self.session() as sess, sess.begin():
                 await sess.execute(stmt)
         except IntegrityError as e:
-            if "FOREIGN KEY" in str(e.orig):
-                raise MalformedError()
+            e = str(e.orig)
+            if "FOREIGN KEY" in e:
+                raise MalformedError(ErrorCode.FOREIGN_KEY_ERROR)
+            elif "UNIQUE" in e:
+                raise MalformedError(ErrorCode.ALREADY_EXISTS)
             raise
 
     async def all(self) -> list[core.Contest]:

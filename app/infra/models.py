@@ -24,20 +24,20 @@ Base = declarative_base()
 
 problem_tag = Table(
     "problem_tag", Base.metadata,
-    Column("problem_id", Integer, ForeignKey("problems.id")),
-    Column("tag_id", Integer, ForeignKey("tags.id")),
+    Column("problem_id", Integer, ForeignKey("problems.id"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True),
 )
 
 
 contest_problem = Table(
     'contest_problem', Base.metadata,
-    Column('contest_id', Integer, ForeignKey('contests.id')),
-    Column('problem_id', Integer, ForeignKey('problems.id')),
+    Column('contest_id', Integer, ForeignKey('contests.id'), primary_key=True),
+    Column('problem_id', Integer, ForeignKey('problems.id'), primary_key=True),
 )
 
 contest_participant = Table('contest_participant', Base.metadata,
-    Column('contest_id', Integer, ForeignKey('contests.id')),
-    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('contest_id', Integer, ForeignKey('contests.id'), primary_key=True),
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
 )
 
 

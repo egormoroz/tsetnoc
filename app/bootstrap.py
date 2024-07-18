@@ -5,7 +5,7 @@ from app.infra.repos import (
     SQLUserRepo, SQLProblemRepo, SQLSubRepo, SQLContestRepo
 )
 
-from app.settings import settings
+# from app.settings import settings
 
 class Bootstrap:
     _instance = None
@@ -18,7 +18,8 @@ class Bootstrap:
 
     def __init__(self):
         self._engine = create_async_engine(
-            url=settings.DATABASE_URL_asyncpg,
+            # url=settings.DATABASE_URL_asyncpg,
+            url="sqlite+aiosqlite:///test.db"
         )
         self._session = async_sessionmaker(self._engine)
 

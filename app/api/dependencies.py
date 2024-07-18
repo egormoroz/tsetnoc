@@ -14,7 +14,7 @@ Bootstrap = Annotated[_Bootstrap, Depends(_Bootstrap.instance)]
 
 
 def getter(attr_name: str):
-    def fn(bs: _Bootstrap):
+    def fn(bs: Bootstrap):
         return getattr(bs, attr_name)
     return fn
 

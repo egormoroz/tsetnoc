@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import FastAPI, HTTPException
 import enum
 
 from app.core.models import User, Problem, PendingSub
@@ -19,7 +19,7 @@ class SubListFmt(enum.Enum):
     FULL = "full"
 
 
-router = APIRouter()
+router = FastAPI()
 
 
 @router.post("/register")

@@ -1,9 +1,10 @@
 import pytest
+from collections import Counter
 
 from app.infra.repos import (
-    SQLProblemRepo, SQLContestRepo, SQLUserRepo, SQLTagRepo,
+    SQLProblemRepo, SQLContestRepo, SQLUserRepo, SQLTagRepo, SQLSubRepo
 )
-from app.core.models import Problem, User, ReservedTags, Contest
+from app.core.models import Problem, User, ReservedTags, Contest, Submission, Verdict
 
 
 def problems_match(got_probs, expected_probs):
@@ -58,11 +59,10 @@ async def test_insert_get_problems_contest(session, insert_problems):
     await cont_repo.add_problems(cid, prob_ids)
 
     got_ids = await prob_repo.get_ids_by_contest(cid)
-    assert sorted(got_ids) == sorted(prob_ids)
+    assert got_ids == prob_ids
 
     got = await prob_repo.get_by_contest(cid)
-    by_id = lambda p: p.id
-    problems_match(sorted(got, key=by_id), sorted(problems, key=by_id))
+    problems_match(got, problems)
 
 
 @pytest.mark.asyncio
@@ -90,7 +90,7 @@ async def test_user_join_contest_get_by_contest(
     await cont_repo.add_participants(contest.id, uids)
 
     uids_got = await user_repo.get_ids_by_contest(contest.id)
-    assert sorted(uids) == sorted(uids_got)
+    assert uids == uids_got
 
 
     for uid in uids:
@@ -121,3 +121,74 @@ async def test_user_problem_visibility(
     assert not await user_repo.can_see_problem(uids[-1], pids[-1])
     
 
+@pytest.mark.asyncio
+async def test_add_sub(
+    session,
+    insert_users: tuple[list[User], SQLUserRepo],
+    insert_problems: tuple[list[Problem], SQLProblemRepo], 
+    insert_contest: tuple[Contest, SQLContestRepo],
+):
+    users, _ = insert_users
+    problems, _ = insert_problems
+    contest, _ = insert_contest
+
+    sub_repo = SQLSubRepo(session)
+    subs = [
+        Submission(
+            id=0, 
+            author_id=users[0].id, 
+            prob_id=problems[0].id,
+            contest_id=contest.id,
+
+            answer="answer 1",
+            n_try=1,
+            verdict=Verdict.ACCEPTED,
+        ),
+        Submission(
+            id=0, 
+            author_id=users[1].id, 
+            prob_id=problems[0].id,
+            contest_id=contest.id,
+
+            answer="wrong answer 1",
+            n_try=1,
+            verdict=Verdict.WRONG,
+        ),
+    ]
+
+    sub_ids = [await sub_repo.add_checked(sub) for sub in subs]
+    assert sub_ids == [sub.id for sub in subs]
+
+
+@pytest.mark.asyncio
+async def test_sub_bulk_get(
+    session,
+    insert_subs: tuple[list[Submission], SQLSubRepo],
+):
+    subs, sub_repo = insert_subs
+
+    uid = subs[0].author_id
+    ids = await sub_repo.get_ids_by(uid)
+    assert ids == [sub.id for sub in subs if sub.author_id == uid]
+
+    uid = subs[0].author_id
+    pid = subs[0].prob_id
+    ids = await sub_repo.get_ids_by(uid, pid)
+    assert ids == [sub.id for sub in subs if sub.author_id == uid and sub.prob_id == pid]
+
+
+@pytest.mark.asyncio
+async def test_sub_count_tries(
+    session,
+    insert_subs: tuple[list[Submission], SQLSubRepo],
+):
+    subs, sub_repo = insert_subs
+    tries = Counter()
+    for sub in subs:
+        key = (sub.author_id, sub.prob_id, sub.contest_id)
+        tries[key] += 1
+
+    for sub in subs:
+        key = (sub.author_id, sub.prob_id, sub.contest_id)
+        tries_got = await sub_repo.count_tries(*key)
+        assert tries_got == tries[key]

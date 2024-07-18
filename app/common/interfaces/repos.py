@@ -64,11 +64,21 @@ class ISubRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_ids_by(self, uid: int, pid: int|None, cid: int|None) -> list[int]:
+    async def get_ids_by(
+        self, 
+        uid: int, 
+        pid: int|None=None, 
+        cid: int|None=None,
+    ) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_by(self, uid: int, pid: int|None, cid: int|None) -> list[Submission]:
+    async def get_by(
+        self, 
+        uid: int, 
+        pid: int|None=None, 
+        cid: int|None=None,
+    ) -> list[Submission]:
         raise NotImplementedError
 
 

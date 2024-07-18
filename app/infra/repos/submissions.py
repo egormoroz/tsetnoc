@@ -21,11 +21,13 @@ class SQLSubRepo(ISubRepo):
 
     async def add_checked(self, sub: core.Submission) -> int:
         data = dataclasses.asdict(sub)
+        del data["id"]
         stmt = insert(Sub).values(data).returning(Sub.id)
         try:
             async with self.session() as sess, sess.begin():
                 result = await sess.execute(stmt)
-                return result.scalar_one()
+                sub.id = result.scalar_one()
+                return sub.id
         except IntegrityError as e:
             # if not isinstance(e.orig, ForeignKeyViolation):
             #     raise
@@ -50,8 +52,13 @@ class SQLSubRepo(ISubRepo):
             result = await sess.execute(query)
             return result.scalar_one()
 
-    async def get_ids_by(self, uid: int, pid: int|None, cid: int|None) -> list[int]:
-        clauses = [Sub.user_id == uid]
+    async def get_ids_by(
+        self, 
+        uid: int, 
+        pid: int|None=None, 
+        cid: int|None=None,
+    ) -> list[int]:
+        clauses = [Sub.author_id == uid]
         if pid is not None:
             clauses.append(Sub.prob_id == pid)
         if cid is not None:
@@ -60,15 +67,16 @@ class SQLSubRepo(ISubRepo):
 
         async with self.session() as sess:
             result = await sess.execute(query)
-            return [i for i in result.scalars().all()]
+            return list(result.scalars().all())
 
     async def get_by(
-            self, 
-            uid: int, 
-            pid: int|None, 
-            cid: int|None) -> list[core.Submission]:
+        self, 
+        uid: int, 
+        pid: int|None=None, 
+        cid: int|None=None,
+    ) -> list[core.Submission]:
         Sub = infra.Submission
-        clauses = [Sub.user_id == uid]
+        clauses = [Sub.author_id == uid]
         if pid is not None:
             clauses.append(Sub.prob_id == pid)
         if cid is not None:

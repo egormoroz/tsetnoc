@@ -23,7 +23,7 @@ class SQLUserRepo(IUserRepo):
 
     async def get(self, id: int) -> core.User | None:
         async with self.session() as sess:
-            query = select(infra.User).filter(infra.User.id == id)
+            query = select(infra.User).where(infra.User.id == id)
             u = await sess.execute(query)
         u = u.scalar_one_or_none()
         if u is None:
@@ -48,16 +48,20 @@ class SQLUserRepo(IUserRepo):
             result = await sess.execute(query)
             return result.scalar_one()
 
-    async def get_by_contest(self, cont_id: int) -> list[int]:
+    async def get_ids_by_contest(self, cont_id: int) -> list[int]:
         cp = infra.contest_participant
-        query = select(infra.User.id).where(cp.c.contest_id == cont_id)
+        query = select(cp.c.user_id).where(cp.c.contest_id == cont_id)
         async with self.session() as sess:
             result = await sess.execute(query)
-            return [i for i in result.scalars().all()]
+            return list(result.scalars().all())
 
     async def joined_contest(self, uid: int, cid: int) -> bool:
         cp = infra.contest_participant
-        query = select(exists()).where(cp.c.contest_id == cid, cp.c.user_id == uid)
+        query = (
+            select(cp)
+            .where(cp.c.contest_id == cid, cp.c.user_id == uid)
+            .limit(1) # ugly
+        )
         async with self.session() as sess:
             result = await sess.execute(query)
-            return result.scalar_one()
+            return result.scalar_one_or_none() is not None

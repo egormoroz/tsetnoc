@@ -1,9 +1,9 @@
 import pytest
 
 from app.infra.repos import (
-    SQLProblemRepo, SQLContestRepo, SQLUserRepo, SQLTagRepo
+    SQLProblemRepo, SQLContestRepo, SQLUserRepo, SQLTagRepo,
 )
-import app.core.models as core
+from app.core.models import Problem, User, ReservedTags, Contest
 
 
 def problems_match(got_probs, expected_probs):
@@ -19,7 +19,7 @@ def problems_match(got_probs, expected_probs):
 @pytest.mark.asyncio
 async def test_insert_get_tags(session):
     tag_repo = SQLTagRepo(session)
-    tags = core.ReservedTags.make()
+    tags = ReservedTags.make()
 
     ids = await tag_repo.add_many(tags, keep_ids=True)
     assert ids == [t.id for t in tags]
@@ -33,9 +33,9 @@ async def test_insert_get_problems(session, insert_tags):
     prob_repo = SQLProblemRepo(session)
 
     problems = [
-        core.Problem(id=0, name="Problem 1", max_tries=3, tags={1, 2}, 
+        Problem(id=0, name="Problem 1", max_tries=3, tags={1, 2}, 
                      content="Content 1", answer="Answer 1"),
-        core.Problem(id=0, name="Problem 2", max_tries=5, tags={2}, 
+        Problem(id=0, name="Problem 2", max_tries=5, tags={2}, 
                      content="Content 2", answer="Answer 2"),
     ]
 
@@ -48,46 +48,76 @@ async def test_insert_get_problems(session, insert_tags):
 
 @pytest.mark.asyncio
 async def test_insert_get_problems_contest(session, insert_problems):
-    problems: list[core.Problem] = insert_problems[0]
+    problems: list[Problem] = insert_problems[0]
     prob_repo: SQLProblemRepo = insert_problems[1]
     cont_repo = SQLContestRepo(session)
 
     prob_ids = [p.id for p in problems]
 
-    cid = await cont_repo.add(core.Contest(id=0, name="contest 1"))
+    cid = await cont_repo.add(Contest(id=0, name="contest 1"))
     await cont_repo.add_problems(cid, prob_ids)
 
     got_ids = await prob_repo.get_ids_by_contest(cid)
-    assert set(got_ids) == set(prob_ids)
+    assert sorted(got_ids) == sorted(prob_ids)
 
     got = await prob_repo.get_by_contest(cid)
-    got.sort(key=lambda p: p.id)
-    problems_match(got, problems)
+    by_id = lambda p: p.id
+    problems_match(sorted(got, key=by_id), sorted(problems, key=by_id))
 
 
 @pytest.mark.asyncio
 async def test_add_get_users(session):
-    users = [
-        core.User.new("User 1"), core.User.new("User 2")
-    ]
+    users = [User.new("User 1"), User.new("User 2")]
     user_repo = SQLUserRepo(session)
     for u in users:
         await user_repo.add(u)
 
-    # for expected in users:
-    #     got = await user_repo.get(expected.id)
-    #     assert got.name == expected.name
+    for expected in users:
+        got = await user_repo.get(expected.id)
+        assert got.name == expected.name
 
 
 @pytest.mark.asyncio
-async def test_join_contest_get_by_contest(
+async def test_user_join_contest_get_by_contest(
     session,
-    insert_users: tuple[list[core.User], SQLUserRepo]
+    insert_users: tuple[list[User], SQLUserRepo],
+    insert_contest: tuple[Contest, SQLContestRepo],
 ):
     users, user_repo = insert_users
+    contest, cont_repo = insert_contest
 
+    uids = [u.id for u in users[:-1]]
+    await cont_repo.add_participants(contest.id, uids)
+
+    uids_got = await user_repo.get_ids_by_contest(contest.id)
+    assert sorted(uids) == sorted(uids_got)
+
+
+    for uid in uids:
+        assert await user_repo.joined_contest(uid, contest.id)
+    assert not await user_repo.joined_contest(users[-1].id, contest.id)
 
 
 @pytest.mark.asyncio
-async def test_create_contest(session):
-    pass
+async def test_user_problem_visibility(
+    session,
+    insert_users: tuple[list[User], SQLUserRepo],
+    insert_problems: tuple[list[Problem], SQLProblemRepo], 
+    insert_contest: tuple[Contest, SQLContestRepo],
+):
+    users, user_repo = insert_users
+    problems, _ = insert_problems
+    contest, cont_repo = insert_contest
+
+    uids = [u.id for u in users]
+    pids = [p.id for p in problems]
+    await cont_repo.add_participants(contest.id, uids[:-1])
+    await cont_repo.add_problems(contest.id, pids[:-1])
+
+    assert await user_repo.can_see_problem(uids[0], pids[0])
+    assert not await user_repo.can_see_problem(uids[0], pids[-1])
+
+    assert not await user_repo.can_see_problem(uids[-1], pids[0])
+    assert not await user_repo.can_see_problem(uids[-1], pids[-1])
+    
+

@@ -22,7 +22,8 @@ class SQLContestRepo(IContestRepo):
         async with self.session() as sess, sess.begin():
             stmt = insert(Cont).values(values).returning(Cont.id)
             result = await sess.execute(stmt)
-            return result.scalar_one()
+            contest.id = result.scalar_one()
+            return contest.id
 
     async def add_participants(self, cid: int, uids: list[int]):
         stmt = insert(infra.contest_participant).values(

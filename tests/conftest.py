@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 import app.infra.models as infra
 import app.core.models as core
-from app.infra.repos import SQLProblemRepo, SQLUserRepo, SQLTagRepo
+from app.infra.repos import SQLProblemRepo, SQLUserRepo, SQLTagRepo, SQLContestRepo
 
 
 @pytest.fixture(scope="session")
@@ -55,4 +55,11 @@ async def insert_users(session):
         await user_repo.add(u)
     return users, user_repo
 
+
+@pytest.fixture(scope="function")
+async def insert_contest(session):
+    contest = core.Contest(id=0, name="contest 1")
+    cont_repo = SQLContestRepo(session)
+    await cont_repo.add(contest)
+    return contest, cont_repo
 

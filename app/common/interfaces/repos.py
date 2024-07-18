@@ -16,7 +16,7 @@ class IUserRepo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_by_contest(self, cont_id: int) -> list[int]:
+    async def get_ids_by_contest(self, cont_id: int) -> list[int]:
         raise NotImplementedError
 
     @abc.abstractmethod

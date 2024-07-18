@@ -86,16 +86,6 @@ async def insert_subs(
             prob_id=problems[0].id,
             contest_id=contest.id,
 
-            answer="answer 1",
-            n_try=1,
-            verdict=Verdict.ACCEPTED,
-        ),
-        Submission(
-            id=0, 
-            author_id=users[0].id, 
-            prob_id=problems[1].id,
-            contest_id=contest.id,
-
             answer="wrong answer 1",
             n_try=1,
             verdict=Verdict.WRONG,
@@ -103,12 +93,22 @@ async def insert_subs(
         Submission(
             id=0, 
             author_id=users[0].id, 
+            prob_id=problems[0].id,
+            contest_id=contest.id,
+
+            answer="wrong answer 1",
+            n_try=2,
+            verdict=Verdict.WRONG,
+        ),
+        Submission(
+            id=0, 
+            author_id=users[0].id, 
             prob_id=problems[1].id,
             contest_id=contest.id,
 
-            answer="wrong answer 2",
-            n_try=2,
-            verdict=Verdict.WRONG,
+            answer="answer 1",
+            n_try=1,
+            verdict=Verdict.ACCEPTED,
         ),
         Submission(
             id=0, 

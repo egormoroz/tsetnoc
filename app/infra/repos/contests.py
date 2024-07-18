@@ -1,7 +1,9 @@
 import dataclasses
 from sqlalchemy import insert, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
+from app.common.errors import MalformedError
 from app.common.interfaces import IContestRepo
 
 import app.core.models as core
@@ -29,15 +31,26 @@ class SQLContestRepo(IContestRepo):
         stmt = insert(infra.contest_participant).values(
             [{"contest_id": cid, "user_id": uid} for uid in uids]
         )
-        async with self.session() as sess, sess.begin():
-            await sess.execute(stmt)
+        try:
+            async with self.session() as sess, sess.begin():
+                await sess.execute(stmt)
+        except IntegrityError as e:
+            if "FOREIGN KEY" in str(e.orig):
+                raise MalformedError()
+            raise
+
 
     async def add_problems(self, cid: int, pids: list[int]):
         stmt = insert(infra.contest_problem).values(
             [{"contest_id": cid, "problem_id": pid} for pid in pids]
         )
-        async with self.session() as sess, sess.begin():
-            await sess.execute(stmt)
+        try:
+            async with self.session() as sess, sess.begin():
+                await sess.execute(stmt)
+        except IntegrityError as e:
+            if "FOREIGN KEY" in str(e.orig):
+                raise MalformedError()
+            raise
 
     async def all(self) -> list[core.Contest]:
         async with self.session() as sess:

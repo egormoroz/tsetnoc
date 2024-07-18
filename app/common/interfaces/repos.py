@@ -23,6 +23,11 @@ class IUserRepo(abc.ABC):
     async def joined_contest(self, uid: int, cid: int) -> bool:
         raise NotImplementedError
 
+    # for admin/debugging purposes
+    @abc.abstractmethod
+    async def all(self) -> list[User]:
+        raise NotImplementedError
+
 
 class IProblemRepo(abc.ABC):
     @abc.abstractmethod

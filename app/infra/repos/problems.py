@@ -1,7 +1,9 @@
 from sqlalchemy import insert, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 from sqlalchemy.orm import selectinload
+from app.common.errors import MalformedError
 from app.common.interfaces import IProblemRepo
 
 import app.core.models as core
@@ -20,21 +22,26 @@ class SQLProblemRepo(IProblemRepo):
             "answer": p.answer
         } for p in problems]
 
-        async with self.session() as sess, sess.begin():
-            stmt = insert(infra.Problem).values(prob_data).returning(infra.Problem.id)
-            result = await sess.execute(stmt)
-            prob_ids = result.scalars().all()
+        try:
+            async with self.session() as sess, sess.begin():
+                stmt = insert(infra.Problem).values(prob_data).returning(infra.Problem.id)
+                result = await sess.execute(stmt)
+                prob_ids = result.scalars().all()
 
-            prob_tag_data = [
-                {"problem_id": pid, "tag_id": tag_id}
-                for p, pid in zip(problems, prob_ids)
-                for tag_id in p.tags
-            ]
-            await sess.execute(insert(infra.problem_tag).values(prob_tag_data))
+                prob_tag_data = [
+                    {"problem_id": pid, "tag_id": tag_id}
+                    for p, pid in zip(problems, prob_ids)
+                    for tag_id in p.tags
+                ]
+                await sess.execute(insert(infra.problem_tag).values(prob_tag_data))
 
-        for p, pid in zip(problems, prob_ids):
-            p.id = pid
-        return list(prob_ids)
+            for p, pid in zip(problems, prob_ids):
+                p.id = pid
+            return list(prob_ids)
+        except IntegrityError as e:
+            if "FOREIGN KEY" in str(e.orig):
+                raise MalformedError()
+            raise
 
     async def get_ids_by_contest(self, cont_id: int) -> list[int]:
         async with self.session() as sess:

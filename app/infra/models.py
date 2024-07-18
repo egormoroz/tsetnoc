@@ -22,20 +22,22 @@ timestamp = Annotated[
 Base = declarative_base()
 
 
-problem_tag = Table("problem_tag", Base.metadata,
+problem_tag = Table(
+    "problem_tag", Base.metadata,
     Column("problem_id", Integer, ForeignKey("problems.id")),
-    Column("tag_id", Integer, ForeignKey("tags.id"))
+    Column("tag_id", Integer, ForeignKey("tags.id")),
 )
 
 
-contest_problem = Table('contest_problem', Base.metadata,
+contest_problem = Table(
+    'contest_problem', Base.metadata,
     Column('contest_id', Integer, ForeignKey('contests.id')),
-    Column('problem_id', Integer, ForeignKey('problems.id'))
+    Column('problem_id', Integer, ForeignKey('problems.id')),
 )
 
 contest_participant = Table('contest_participant', Base.metadata,
     Column('contest_id', Integer, ForeignKey('contests.id')),
-    Column('user_id', Integer, ForeignKey('users.id'))
+    Column('user_id', Integer, ForeignKey('users.id')),
 )
 
 

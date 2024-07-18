@@ -29,8 +29,6 @@ class SQLSubRepo(ISubRepo):
                 sub.id = result.scalar_one()
                 return sub.id
         except IntegrityError as e:
-            # if not isinstance(e.orig, ForeignKeyViolation):
-            #     raise
             orig = str(e.orig)
             if "author_id" in orig:
                 ec = ErrorCode.USER_NOT_FOUND

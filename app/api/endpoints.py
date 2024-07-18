@@ -36,19 +36,36 @@ async def register_user(uname: str, users: Users):
 
 @app.post("/join")
 async def join_contest(uid: int, contest_id: int, conts: Contests):
-    await conts.add_participants(contest_id, [uid])
-    logger.info(f"user(id={uid}) joined contest(id={contest_id})")
-    return {"message": "joined contest successfully"}
+    try:
+        await conts.add_participants(contest_id, [uid])
+        logger.info(f"user(id={uid}) joined contest(id={contest_id})")
+        return {"message": "joined contest successfully"}
+    except MalformedError as e:
+        logger.error(f"user(id={uid}) failed to joined contest(id={contest_id}): ",
+                     "either user or contest doesn't exist: ", e.ec)
+        raise HTTPException(status_code=422, detail="user/contest doesn't exist")
 
 
 @app.post("/problems", status_code=201)
 async def add_problems(prob_dtos: list[NewProblemDTO], probs: Problems):
     core_probs = [Problem(id=0, **dto.__dict__) for dto in prob_dtos]
-    ids = probs.add_many(core_probs)
+    ids = await probs.add_many(core_probs)
     logger.info("added problems: {}".format(", ".join(
         f"Prob(id={p.id}, name={p.name})" for p in core_probs
     )))
     return {"message": "problems added successfully", "ids": ids }
+
+
+@app.post("/contest/{cid}/problems", status_code=201)
+async def add_probs_to_contest(cid: int, prob_ids: list[int], conts: Contests):
+    try:
+        await conts.add_problems(cid, prob_ids)
+        logger.info(f"added {prob_ids=} to contest(id={cid})")
+        return {"message": "problems added to contest successfully" }
+    except MalformedError:
+        logger.error(f"failed to add problems to contest(id={cid}): ",
+                     "the contest doesn't exist")
+        raise HTTPException(status_code=422, detail="contest doesn't exist")
 
 
 @app.post("/submit")
@@ -121,4 +138,15 @@ async def get_submission_list(
 async def get_contest_list(conts: Contests):
     logger.info("requested contest list")
     return await conts.all()
+
+
+@app.get("/users")
+async def get_user_list(users: Users):
+    logger.info("requested user list")
+    return await users.all()
+
+@app.get("/contest/{cid}/users")
+async def get_contest_users(cid: int, users: Users):
+    logger.info(f"requested user list from contest(id={cid})")
+    return await users.get_ids_by_contest(cid)
 

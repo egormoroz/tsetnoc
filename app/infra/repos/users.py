@@ -65,3 +65,16 @@ class SQLUserRepo(IUserRepo):
         async with self.session() as sess:
             result = await sess.execute(query)
             return result.scalar_one_or_none() is not None
+
+    async def all(self) -> list[core.User]:
+        async with self.session() as sess:
+            result = await sess.execute(select(infra.User))
+        return [
+            core.User(
+                id=u.id, 
+                name=u.name, 
+                n_submissions=u.n_submissions,
+                probs_tried=u.probs_tried,
+                probs_solved=u.probs_solved,
+            ) for u in result.scalars().all()
+        ]

@@ -18,7 +18,8 @@ class SQLUserRepo(IUserRepo):
         async with self.session() as sess, sess.begin():
             stmt = insert(infra.User).values(data).returning(infra.User.id)
             result = await sess.execute(stmt)
-            return result.scalar_one()
+            user.id = result.scalar_one()
+            return user.id
 
     async def get(self, id: int) -> core.User | None:
         async with self.session() as sess:

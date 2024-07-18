@@ -1,6 +1,6 @@
 import abc
 
-from app.core.models import Problem, Submission, Contest, User
+from app.core.models import Problem, Submission, Contest, User, Tag
 
 class IUserRepo(abc.ABC):
     @abc.abstractmethod
@@ -39,6 +39,16 @@ class IProblemRepo(abc.ABC):
 
     @abc.abstractmethod
     async def get_by_contest(self, cont_id: int) -> list[Problem]:
+        raise NotImplementedError
+
+
+class ITagRepo(abc.ABC):
+    @abc.abstractmethod
+    async def add_many(self, tags: list[Tag], keep_ids=False) -> list[int]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def get_many(self, ids: list[int]) -> list[Tag]:
         raise NotImplementedError
 
 

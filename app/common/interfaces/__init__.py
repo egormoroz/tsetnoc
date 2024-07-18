@@ -1,1 +1,1 @@
-from .repos import IUserRepo, IProblemRepo, ISubRepo, IContestRepo
+from .repos import IUserRepo, IProblemRepo, ISubRepo, IContestRepo, ITagRepo

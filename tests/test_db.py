@@ -1,8 +1,9 @@
 import pytest
 
-from app.infra.repos import SQLProblemRepo, SQLContestRepo
+from app.infra.repos import (
+    SQLProblemRepo, SQLContestRepo, SQLUserRepo, SQLTagRepo
+)
 import app.core.models as core
-import app.infra.models as infra
 
 
 def problems_match(got_probs, expected_probs):
@@ -16,21 +17,30 @@ def problems_match(got_probs, expected_probs):
 
 
 @pytest.mark.asyncio
-async def test_insert_problems(session):
-    async with session() as sess, sess.begin():
-        tag1 = infra.Tag(id=1)
-        tag2 = infra.Tag(id=2)
-        sess.add_all([tag1, tag2])
+async def test_insert_get_tags(session):
+    tag_repo = SQLTagRepo(session)
+    tags = core.ReservedTags.make()
 
+    ids = await tag_repo.add_many(tags, keep_ids=True)
+    assert ids == [t.id for t in tags]
+
+    got_tags = await tag_repo.get_many(ids)
+    assert got_tags == tags
+
+
+@pytest.mark.asyncio
+async def test_insert_get_problems(session, insert_tags):
     prob_repo = SQLProblemRepo(session)
 
     problems = [
-        core.Problem(id=0, name="Problem 1", max_tries=3, tags={1, 2}, content="Content 1", answer="Answer 1"),
-        core.Problem(id=0, name="Problem 2", max_tries=5, tags={2}, content="Content 2", answer="Answer 2"),
+        core.Problem(id=0, name="Problem 1", max_tries=3, tags={1, 2}, 
+                     content="Content 1", answer="Answer 1"),
+        core.Problem(id=0, name="Problem 2", max_tries=5, tags={2}, 
+                     content="Content 2", answer="Answer 2"),
     ]
 
     inserted_ids = await prob_repo.add_many(problems)
-    assert inserted_ids == [1, 2]
+    assert inserted_ids == [p.id for p in problems]
 
     db_problems = [await prob_repo.get(i) for i in inserted_ids]
     problems_match(db_problems, problems)
@@ -54,3 +64,30 @@ async def test_insert_get_problems_contest(session, insert_problems):
     got.sort(key=lambda p: p.id)
     problems_match(got, problems)
 
+
+@pytest.mark.asyncio
+async def test_add_get_users(session):
+    users = [
+        core.User.new("User 1"), core.User.new("User 2")
+    ]
+    user_repo = SQLUserRepo(session)
+    for u in users:
+        await user_repo.add(u)
+
+    # for expected in users:
+    #     got = await user_repo.get(expected.id)
+    #     assert got.name == expected.name
+
+
+@pytest.mark.asyncio
+async def test_join_contest_get_by_contest(
+    session,
+    insert_users: tuple[list[core.User], SQLUserRepo]
+):
+    users, user_repo = insert_users
+
+
+
+@pytest.mark.asyncio
+async def test_create_contest(session):
+    pass

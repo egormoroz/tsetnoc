@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 import app.infra.models as infra
 import app.core.models as core
-from app.infra.repos.problems import SQLProblemRepo
+from app.infra.repos import SQLProblemRepo, SQLUserRepo, SQLTagRepo
 
 
 @pytest.fixture(scope="session")
@@ -25,14 +25,15 @@ async def session(engine):
 
 
 @pytest.fixture(scope="function")
-async def insert_problems(session):
-    async with session() as sess, sess.begin():
-        tag1 = infra.Tag(id=1)
-        tag2 = infra.Tag(id=2)
-        sess.add_all([tag1, tag2])
-        sess.add_all([infra.TagInfo(id=1, name="easy"), 
-                      infra.TagInfo(id=2, name="hard")])
+async def insert_tags(session):
+    tags = core.ReservedTags.make()
+    tag_repo = SQLTagRepo(session)
+    await tag_repo.add_many(tags, keep_ids=True)
+    return tags, tag_repo
 
+
+@pytest.fixture(scope="function")
+async def insert_problems(session, insert_tags):
     problems = [
         core.Problem(id=1, name="Problem 1", max_tries=3, tags={1, 2}, 
                      content="Content 1", answer="Answer 1"),
@@ -42,4 +43,16 @@ async def insert_problems(session):
     repo = SQLProblemRepo(session)
     await repo.add_many(problems)
     return problems, repo
+
+
+@pytest.fixture(scope="function")
+async def insert_users(session):
+    users = [
+        core.User.new("User 1"), core.User.new("User 2")
+    ]
+    user_repo = SQLUserRepo(session)
+    for u in users:
+        await user_repo.add(u)
+    return users, user_repo
+
 

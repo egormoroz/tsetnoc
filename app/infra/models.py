@@ -8,7 +8,7 @@ from typing import Annotated
 from app.core.models import Verdict
 
 
-intpk = Annotated[int, mapped_column(primary_key=True)]
+intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 nestr = Annotated[str, mapped_column(String, nullable=False)]
 nestr64 = Annotated[str, mapped_column(String(64), nullable=False)]
 str64 = Annotated[str, mapped_column(String(64), nullable=True)]

@@ -32,14 +32,16 @@ class SQLProblemRepo(IProblemRepo):
             ]
             await sess.execute(insert(infra.problem_tag).values(prob_tag_data))
 
-        return [i for i in prob_ids]
+        for p, pid in zip(problems, prob_ids):
+            p.id = pid
+        return list(prob_ids)
 
     async def get_ids_by_contest(self, cont_id: int) -> list[int]:
         async with self.session() as sess:
             query = select(infra.contest_problem.c.problem_id).where(
                 infra.contest_problem.c.contest_id==cont_id)
             result = await sess.execute(query)
-            return [i for i in result.scalars().all()]
+            return list(result.scalars().all())
 
     async def get_by_contest(self, cont_id: int) -> list[core.Problem]:
         query = (

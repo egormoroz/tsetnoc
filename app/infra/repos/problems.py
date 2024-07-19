@@ -10,6 +10,17 @@ import app.core.models as core
 import app.infra.models as infra
 
 
+# evil magic
+class _Wrapper:
+    def __init__(self, p: infra.Problem):
+        self._p = p
+
+    def __getattr__(self, name):
+        if name == "tags":
+            return set(t.id for t in self._p.tags)
+        return getattr(self._p, name)
+
+
 class SQLProblemRepo(IProblemRepo):
     def __init__(self, session: async_sessionmaker[AsyncSession]):
         self.session = session
@@ -55,24 +66,19 @@ class SQLProblemRepo(IProblemRepo):
             return list(result.scalars().all())
 
     async def get_by_contest(self, cont_id: int) -> list[core.Problem]:
+        cp = infra.contest_problem
         query = (
             select(infra.Problem)
             .options(selectinload(infra.Problem.tags))
-            .where(infra.contest_problem.c.contest_id == cont_id)
-            .group_by(infra.Problem.id)
+            .where(cp.c.contest_id == cont_id, 
+                   cp.c.problem_id == infra.Problem.id)
         )
         async with self.session() as sess:
             result = await sess.execute(query)
             problems_with_tags = result.scalars().all()
         return [
-            core.Problem(
-                id=p.id,
-                name=p.name,
-                max_tries=p.max_tries,
-                content=p.content,
-                answer=p.answer,
-                tags=set([t.id for t in p.tags])
-            ) for p in problems_with_tags
+            core.Problem.model_validate(_Wrapper(p), from_attributes=True)
+            for p in problems_with_tags
         ]
 
     async def get(self, id: int) -> core.Problem | None:
@@ -84,12 +90,4 @@ class SQLProblemRepo(IProblemRepo):
         async with self.session() as sess:
             result = await sess.execute(query)
             p = result.scalar_one_or_none()
-        return core.Problem(
-            id=p.id,
-            name=p.name,
-            max_tries=p.max_tries,
-            content=p.content,
-            answer=p.answer,
-            tags=set(tag.id for tag in p.tags)
-        )
-
+        return core.Problem.model_validate(_Wrapper(p), from_attributes=True)

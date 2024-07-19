@@ -1,4 +1,3 @@
-import dataclasses
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
@@ -13,7 +12,7 @@ class SQLTagRepo(ITagRepo):
         self.session = session
 
     async def add_many(self, tags: list[core.Tag], keep_ids=False) -> list[int]:
-        data = [dataclasses.asdict(t) for t in tags]
+        data = [t.model_dump() for t in tags]
         stmt = insert(infra.Tag).returning(infra.Tag.id)
         if keep_ids:
             stmt = stmt.values([{ "id": t.id } for t in tags])
@@ -36,6 +35,6 @@ class SQLTagRepo(ITagRepo):
             result = await sess.execute(stmt)
         tags = result.scalars().all()
         return [
-            core.Tag(id=t.id, name=t.name, description=t.description)
+            core.Tag.model_validate(t, from_attributes=True)
             for t in tags
         ]

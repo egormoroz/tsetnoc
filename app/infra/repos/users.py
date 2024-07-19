@@ -1,4 +1,3 @@
-import dataclasses
 from sqlalchemy import exists, select, insert, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
@@ -13,7 +12,7 @@ class SQLUserRepo(IUserRepo):
         self.session = session
 
     async def add(self, user: core.User) -> int:
-        data = dataclasses.asdict(user)
+        data = user.model_dump()
         del data["id"]
         async with self.session() as sess, sess.begin():
             stmt = insert(infra.User).values(data).returning(infra.User.id)
@@ -28,8 +27,7 @@ class SQLUserRepo(IUserRepo):
         u = u.scalar_one_or_none()
         if u is None:
             return None
-        return core.User(id=u.id, name=u.name, n_submissions=u.n_submissions,
-                         probs_tried=u.probs_tried, probs_solved=u.probs_solved)
+        return core.User.model_validate(u, from_attributes=True)
 
     async def can_see_problem(self, uid: int, pid: int) -> bool:
         c_prob = infra.contest_problem
@@ -70,11 +68,6 @@ class SQLUserRepo(IUserRepo):
         async with self.session() as sess:
             result = await sess.execute(select(infra.User))
         return [
-            core.User(
-                id=u.id, 
-                name=u.name, 
-                n_submissions=u.n_submissions,
-                probs_tried=u.probs_tried,
-                probs_solved=u.probs_solved,
-            ) for u in result.scalars().all()
+            core.User.model_validate(u, from_attributes=True)
+            for u in result.scalars().all()
         ]

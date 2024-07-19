@@ -1,9 +1,8 @@
 import enum
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Tag:
+class Tag(BaseModel):
     id: int
     name: str|None = None
     description: str|None = None
@@ -19,13 +18,12 @@ class ReservedTags(enum.IntEnum):
     PROB_UNGRADED = 3
 
 
-    @staticmethod
-    def make() -> list[Tag]:
-        T = ReservedTags
+    @classmethod
+    def make(cls) -> list[Tag]:
         return [
-            Tag(id=T.MAX_TRIES_UNLIMITED, name="tries unlimited"),
-            Tag(id=T.ANS_CASE_INSENSETIVE, name="answer case insensetive"),
-            Tag(id=T.ANS_DONT_TRIM, name="answer not trimmed"),
-            Tag(id=T.PROB_UNGRADED, name="problem ungraded"),
+            Tag(id=cls.MAX_TRIES_UNLIMITED, name="tries unlimited"),
+            Tag(id=cls.ANS_CASE_INSENSETIVE, name="answer case insensetive"),
+            Tag(id=cls.ANS_DONT_TRIM, name="answer not trimmed"),
+            Tag(id=cls.PROB_UNGRADED, name="problem ungraded"),
         ]
 

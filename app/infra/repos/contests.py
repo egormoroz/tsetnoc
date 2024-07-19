@@ -1,4 +1,3 @@
-import dataclasses
 from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +18,7 @@ class SQLContestRepo(IContestRepo):
         self.session = session
 
     async def add(self, contest: core.Contest) -> int:
-        values = dataclasses.asdict(contest)
+        values = contest.model_dump()
         del values["id"]
         async with self.session() as sess, sess.begin():
             stmt = insert(Cont).values(values).returning(Cont.id)
@@ -62,7 +61,7 @@ class SQLContestRepo(IContestRepo):
         async with self.session() as sess:
             result = await sess.execute(select(Cont))
         return [
-            core.Contest(id=c.id, name=c.name, start=c.start, end=c.end)
+            core.Contest.model_validate(c, from_attributes=True)
             for c in result.scalars().all()
         ]
 

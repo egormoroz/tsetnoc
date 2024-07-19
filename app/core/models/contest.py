@@ -1,8 +1,7 @@
-import dataclasses
+from pydantic import BaseModel
 from datetime import datetime
 
-@dataclasses.dataclass
-class Contest:
+class Contest(BaseModel):
     id: int
     name: str
     start: datetime|None = None

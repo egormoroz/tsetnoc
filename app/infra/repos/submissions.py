@@ -1,5 +1,3 @@
-import dataclasses
-
 from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +18,7 @@ class SQLSubRepo(ISubRepo):
         self.session = session
 
     async def add_checked(self, sub: core.Submission) -> int:
-        data = dataclasses.asdict(sub)
+        data = sub.model_dump()
         del data["id"]
         stmt = insert(Sub).values(data).returning(Sub.id)
         try:
@@ -80,13 +78,6 @@ class SQLSubRepo(ISubRepo):
         async with self.session() as sess:
             result = await sess.execute(query)
         return [
-            core.Submission(
-                id=sub.id,
-                author_id=sub.author_id,
-                prob_id=sub.prob_id,
-                contest_id=sub.contest_id,
-                answer=sub.answer,
-                verdict=sub.verdict,
-                n_try=sub.n_try
-            ) for sub in result.scalars().all()
+            core.Submission.model_validate(sub, from_attributes=True)
+            for sub in result.scalars().all()
         ]

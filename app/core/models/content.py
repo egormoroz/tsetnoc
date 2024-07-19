@@ -1,9 +1,8 @@
 import enum
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Problem:
+class Problem(BaseModel):
     id: int
     name: str
 
@@ -25,8 +24,7 @@ class Verdict(enum.IntEnum):
     TRY_LIMIT_EXCEEDED = 2
 
 
-@dataclass
-class RawSub:
+class RawSub(BaseModel):
     author_id: int
     prob_id: int
     contest_id: int
@@ -34,14 +32,12 @@ class RawSub:
     answer: str
 
 
-@dataclass
 class Submission(RawSub):
     id: int
     n_try: int
     verdict: Verdict
 
 
-@dataclass
 class PendingSub(RawSub):
     def finalize(self, n_try: int, verdict: Verdict) -> Submission:
         return Submission(

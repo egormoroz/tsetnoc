@@ -1,10 +1,8 @@
-import dataclasses
+from pydantic import BaseModel
+from datetime import datetime
 
-@dataclasses.dataclass
-class Contest:
+class Contest(BaseModel):
     id: int
     name: str
-    particip_ids: list[int]
-    prob_ids: list[int]
-    sub_ids: list[int]
-
+    start: datetime|None = None
+    end: datetime|None = None

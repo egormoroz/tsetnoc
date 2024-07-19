@@ -1,8 +1,8 @@
 ## Tables
 1. Problems
     - id (int)
-    - public (bool)
     - name (fixed str)
+    - max_tries (int)
     - content (str)
     - answer (str)
 

@@ -1,6 +1,4 @@
-from sqlalchemy import (
-    ForeignKey, Column, Integer, String, Table, func
-)
+from sqlalchemy import ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
 import datetime
 from typing import Annotated
@@ -22,23 +20,23 @@ timestamp = Annotated[
 Base = declarative_base()
 
 
-problem_tag = Table(
-    "problem_tag", Base.metadata,
-    Column("problem_id", Integer, ForeignKey("problems.id"), primary_key=True),
-    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True),
-)
+class ProblemTag(Base):
+    __tablename__ = "problem_tag"
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problems.id"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tags.id"), primary_key=True)
 
 
-contest_problem = Table(
-    'contest_problem', Base.metadata,
-    Column('contest_id', Integer, ForeignKey('contests.id'), primary_key=True),
-    Column('problem_id', Integer, ForeignKey('problems.id'), primary_key=True),
-)
+class ContestProblem(Base):
+    __tablename__ = "contest_problem"
+    contest_id: Mapped[int] = mapped_column(ForeignKey("contests.id"), primary_key=True)
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problems.id"), primary_key=True)
 
-contest_participant = Table('contest_participant', Base.metadata,
-    Column('contest_id', Integer, ForeignKey('contests.id'), primary_key=True),
-    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
-)
+
+
+class ContestParticipant(Base):
+    __tablename__ = "contest_participant"
+    contest_id: Mapped[int] = mapped_column(ForeignKey("contests.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
 
 
 class Problem(Base):
@@ -51,9 +49,9 @@ class Problem(Base):
     content: Mapped[nestr]
     answer: Mapped[nestr64]
 
-    tags = relationship("Tag", secondary=problem_tag, back_populates="problems")
+    tags = relationship("Tag", secondary="problem_tag", back_populates="problems")
     submissions = relationship('Submission', back_populates='problem')
-    contests = relationship('Contest', secondary=contest_problem, back_populates='problems')
+    contests = relationship('Contest', secondary="contest_problem", back_populates='problems')
 
 
 class Tag(Base):
@@ -61,7 +59,7 @@ class Tag(Base):
 
     id: Mapped[intpk]
 
-    problems = relationship("Problem", secondary=problem_tag, back_populates="tags")
+    problems = relationship("Problem", secondary="problem_tag", back_populates="tags")
     info = relationship("TagInfo", back_populates="tag", uselist=False)
 
 
@@ -85,7 +83,8 @@ class User(Base):
     probs_solved: Mapped[int0]
 
     submissions = relationship('Submission', back_populates='author')
-    contests = relationship('Contest', secondary=contest_participant, back_populates='participants')
+    contests = relationship('Contest', secondary="contest_participant", 
+                            back_populates='participants')
 
 
 class Submission(Base):
@@ -113,8 +112,10 @@ class Contest(Base):
     start: Mapped[datetime.datetime] = mapped_column(nullable=True)
     end: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
-    problems = relationship('Problem', secondary=contest_problem, back_populates='contests')
-    participants = relationship('User', secondary=contest_participant, back_populates='contests')
+    problems = relationship('Problem', secondary="contest_problem",
+                            back_populates='contests')
+    participants = relationship('User', secondary="contest_participant",
+                                back_populates='contests')
     submissions = relationship('Submission', back_populates='contest')
 
 

@@ -30,15 +30,15 @@ class SQLUserRepo(IUserRepo):
         return core.User.model_validate(u, from_attributes=True)
 
     async def can_see_problem(self, uid: int, pid: int) -> bool:
-        c_prob = infra.contest_problem
-        c_part = infra.contest_participant
+        c_prob = infra.ContestProblem
+        c_part = infra.ContestParticipant
 
         query = select(exists().where(
             and_(
-                infra.Contest.id == c_prob.c.contest_id,
-                c_prob.c.problem_id == pid,
-                infra.Contest.id == c_part.c.contest_id,
-                c_part.c.user_id == uid
+                infra.Contest.id == c_prob.contest_id,
+                c_prob.problem_id == pid,
+                infra.Contest.id == c_part.contest_id,
+                c_part.user_id == uid
             )
         ))
 
@@ -47,17 +47,17 @@ class SQLUserRepo(IUserRepo):
             return result.scalar_one()
 
     async def get_ids_by_contest(self, cont_id: int) -> list[int]:
-        cp = infra.contest_participant
-        query = select(cp.c.user_id).where(cp.c.contest_id == cont_id)
+        cp = infra.ContestParticipant
+        query = select(cp.user_id).where(cp.contest_id == cont_id)
         async with self.session() as sess:
             result = await sess.execute(query)
             return list(result.scalars().all())
 
     async def joined_contest(self, uid: int, cid: int) -> bool:
-        cp = infra.contest_participant
+        cp = infra.ContestParticipant
         query = (
             select(cp)
-            .where(cp.c.contest_id == cid, cp.c.user_id == uid)
+            .where(cp.contest_id == cid, cp.user_id == uid)
             .limit(1) # ugly
         )
         async with self.session() as sess:

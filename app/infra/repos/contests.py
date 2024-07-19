@@ -27,7 +27,7 @@ class SQLContestRepo(IContestRepo):
             return contest.id
 
     async def add_participants(self, cid: int, uids: list[int]):
-        stmt = insert(infra.contest_participant).values(
+        stmt = insert(infra.ContestParticipant).values(
             [{"contest_id": cid, "user_id": uid} for uid in uids]
         )
         try:
@@ -43,7 +43,7 @@ class SQLContestRepo(IContestRepo):
 
 
     async def add_problems(self, cid: int, pids: list[int]):
-        stmt = insert(infra.contest_problem).values(
+        stmt = insert(infra.ContestProblem).values(
             [{"contest_id": cid, "problem_id": pid} for pid in pids]
         )
         try:

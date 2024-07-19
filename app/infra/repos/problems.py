@@ -45,7 +45,7 @@ class SQLProblemRepo(IProblemRepo):
                     for tag_id in p.tags
                 ]
                 if prob_tag_data:
-                    await sess.execute(insert(infra.problem_tag).values(prob_tag_data))
+                    await sess.execute(insert(infra.ProblemTag).values(prob_tag_data))
 
             for p, pid in zip(problems, prob_ids):
                 p.id = pid
@@ -60,18 +60,18 @@ class SQLProblemRepo(IProblemRepo):
 
     async def get_ids_by_contest(self, cont_id: int) -> list[int]:
         async with self.session() as sess:
-            query = select(infra.contest_problem.c.problem_id).where(
-                infra.contest_problem.c.contest_id==cont_id)
+            query = select(infra.ContestProblem.problem_id).where(
+                infra.ContestProblem.contest_id==cont_id)
             result = await sess.execute(query)
             return list(result.scalars().all())
 
     async def get_by_contest(self, cont_id: int) -> list[core.Problem]:
-        cp = infra.contest_problem
+        cp = infra.ContestProblem
         query = (
             select(infra.Problem)
             .options(selectinload(infra.Problem.tags))
-            .where(cp.c.contest_id == cont_id, 
-                   cp.c.problem_id == infra.Problem.id)
+            .where(cp.contest_id == cont_id, 
+                   cp.problem_id == infra.Problem.id)
         )
         async with self.session() as sess:
             result = await sess.execute(query)
